@@ -156,14 +156,6 @@ npx serve .
 
 ---
 
-## 🖥️ Screenshots
-
-| Login | Dashboard |
-|:-----:|:---------:|
-| ![Login](screenshots/01-login-screen.png) | Coming soon |
-
----
-
 ## 📁 Project Structure
 
 ```
