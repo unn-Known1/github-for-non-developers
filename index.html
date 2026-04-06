@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GitHub Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="login-screen" class="screen active">
+    <div class="login-card">
+      <div class="login-logo">
+        <svg height="64" viewBox="0 0 16 16" width="64" fill="currentColor">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+            0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52
+            -.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2
+            -3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82
+            .64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08
+            2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01
+            1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>
+      </div>
+      <h1>GitHub Manager</h1>
+      <p class="subtitle">Manage your GitHub with a Personal Access Token</p>
+      <div class="form-group">
+        <label for="pat-input">Personal Access Token</label>
+        <div class="input-with-toggle">
+          <input type="password" id="pat-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" />
+          <button class="toggle-visibility" id="toggle-pat" title="Show/Hide token">
+            <svg id="eye-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <button id="login-btn" class="btn btn-primary btn-block">
+        <span id="login-text">Connect to GitHub</span>
+        <span id="login-spinner" class="spinner hidden"></span>
+      </button>
+      <div id="login-error" class="error-msg hidden"></div>
+      <p class="hint">Your token is stored only in your browser session and never sent to any server other than api.github.com</p>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="app-screen" class="screen hidden">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="user-info" id="user-info">
+          <img id="user-avatar" src="" alt="avatar" class="avatar"/>
+          <div>
+            <div id="user-name" class="user-name"></div>
+            <div id="user-login" class="user-login"></div>
+          </div>
+        </div>
+        <button class="hamburger" id="sidebar-toggle">☰</button>
+      </div>
+      <nav class="sidebar-nav">
+        <!-- Feature 3: Dashboard nav item -->
+        <button class="nav-item" data-section="dashboard">
+          <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor"><path d="M1 1.75C1 .784 1.784 0 2.75 0h3.5C7.216 0 8 .784 8 1.75v3.5A1.75 1.75 0 016.25 7h-3.5A1.75 1.75 0 011 5.25v-3.5zm1.75-.25a.25.25 0 00-.25.25v3.5c0 .138.112.25.25.25h3.5a.25.25 0 00.25-.25v-3.5a.25.25 0 00-.25-.25h-3.5zM1 10.75C1 9.784 1.784 9 2.75 9h3.5c.966 0 1.75.784 1.75 1.75v3.5A1.75 1.75 0 016.25 16h-3.5A1.75 1.75 0 011 14.25v-3.5zm1.75-.25a.25.25 0 00-.25.25v3.5c0 .138.112.25.25.25h3.5a.25.25 0 00.25-.25v-3.5a.25.25 0 00-.25-.25h-3.5zM9 1.75C9 .784 9.784 0 10.75 0h3.5C15.216 0 16 .784 16 1.75v3.5A1.75 1.75 0 0114.25 7h-3.5A1.75 1.75 0 019 5.25v-3.5zm1.75-.25a.25.25 0 00-.25.25v3.5c0 .138.112.25.25.25h3.5a.25.25 0 00.25-.25v-3.5a.25.25 0 00-.25-.25h-3.5zM9 10.75C9 9.784 9.784 9 10.75 9h3.5c.966 0 1.75.784 1.75 1.75v3.5A1.75 1.75 0 0114.25 16h-3.5A1.75 1.75 0 019 14.25v-3.5zm1.75-.25a.25.25 0 00-.25.25v3.5c0 .138.112.25.25.25h3.5a.25.25 0 00.25-.25v-3.5a.25.25 0 00-.25-.25h-3.5z"/></svg>
+          Dashboard
+        </button>
+        <button class="nav-item" data-section="repos">
+          <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor"><path d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V2.5a1 1 0 011-1h8zM5 12.25v3.25a.25.25 0 00.4.2l1.45-1.087a.25.25 0 01.3 0L8.6 15.7a.25.25 0 00.4-.2v-3.25a.25.25 0 00-.25-.25h-3.5a.25.25 0 00-.25.25z"/></svg>
+          Repositories
+        </button>
+        <button class="nav-item" data-section="issues">
+          <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor"><path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/><path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"/></svg>
+          Issues
+        </button>
+        <button class="nav-item" data-section="pulls">
+          <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor"><path fill-rule="evenodd" d="M7.177 3.073L9.573.677A.25.25 0 0110 .854v4.792a.25.25 0 01-.427.177L7.177 3.427a.25.25 0 010-.354zM3.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122v5.256a2.251 2.251 0 11-1.5 0V5.372A2.25 2.25 0 011.5 3.25zM11 2.5h-1V4h1a1 1 0 011 1v5.628a2.251 2.251 0 101.5 0V5A2.5 2.5 0 0011 2.5zm1 10.25a.75.75 0 111.5 0 .75.75 0 01-1.5 0zM3.75 12a.75.75 0 100 1.5.75.75 0 000-1.5z"/></svg>
+          Pull Requests
+        </button>
+        <button class="nav-item" data-section="gists">
+          <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor"><path fill-rule="evenodd" d="M14 1H2a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V2a1 1 0 00-1-1zM2 0a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V2a2 2 0 00-2-2H2z"/><path d="M6.854 4.646a.5.5 0 010 .708L4.207 8l2.647 2.646a.5.5 0 01-.708.708l-3-3a.5.5 0 010-.708l3-3a.5.5 0 01.708 0zm2.292 0a.5.5 0 000 .708L11.793 8l-2.647 2.646a.5.5 0 00.708.708l3-3a.5.5 0 000-.708l-3-3a.5.5 0 00-.708 0z"/></svg>
+          Gists
+        </button>
+        <button class="nav-item" data-section="profile">
+          <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor"><path fill-rule="evenodd" d="M10.5 5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zm.061 3.073a4 4 0 10-5.123 0 6.004 6.004 0 00-3.431 5.142.75.75 0 001.498.07 4.5 4.5 0 018.99 0 .75.75 0 001.498-.07 6.005 6.005 0 00-3.432-5.142z"/></svg>
+          Profile
+        </button>
+        <!-- Category 5: Organization -->
+        <button class="nav-item" data-section="orgs">
+          <span>🏢</span> Organization
+        </button>
+        <!-- Category 9: GitHub Actions -->
+        <button class="nav-item" data-section="actions">
+          <span>⚡</span> Actions
+        </button>
+        <!-- Category 11: Labels -->
+        <button class="nav-item" data-section="labels">
+          <span>🏷️</span> Labels
+        </button>
+        <!-- Category 11: Milestones -->
+        <button class="nav-item" data-section="milestones">
+          <span>📍</span> Milestones
+        </button>
+        <!-- Category 10: Packages -->
+        <button class="nav-item" data-section="packages">
+          <span>📦</span> Packages
+        </button>
+        <!-- Category 15: Settings -->
+        <button class="nav-item" data-section="settings">
+          <span>⚙️</span> Settings
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <!-- Feature 2: Theme Toggle Button -->
+        <button id="theme-toggle-btn" class="btn btn-secondary btn-block" style="margin-bottom:8px" title="Toggle Theme">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+          Toggle Theme
+        </button>
+        <button id="logout-btn" class="btn btn-danger btn-block">
+          <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path fill-rule="evenodd" d="M2 2.75C2 1.784 2.784 1 3.75 1h2.5a.75.75 0 010 1.5h-2.5a.25.25 0 00-.25.25v10.5c0 .138.112.25.25.25h2.5a.75.75 0 010 1.5h-2.5A1.75 1.75 0 012 13.25V2.75zm10.44 4.5H6.75a.75.75 0 000 1.5h5.69l-1.97 1.97a.75.75 0 101.06 1.06l3.25-3.25a.75.75 0 000-1.06l-3.25-3.25a.75.75 0 10-1.06 1.06l1.97 1.97z"/></svg>
+          Logout
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+      <!-- Feature 3: Dashboard Section -->
+      <section id="dashboard-section" class="content-section hidden">
+        <div class="section-header">
+          <h2>📊 Dashboard</h2>
+          <button id="dashboard-refresh-btn" class="btn btn-secondary btn-sm" title="Refresh Data">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+              <path d="M8 3a5 5 0 104.546 2.914.5.5 0 01.908-.418A6 6 0 118 2v1z"/>
+              <path d="M8 4.466V.534a.25.25 0 01.41-.192l2.36 1.966a.25.25 0 010 .384L8.41 4.658A.25.25 0 018 4.466z"/>
+            </svg>
+            Refresh
+          </button>
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div class="dashboard-tabs">
+          <button class="tab-btn active" data-tab="overview">Overview</button>
+          <button class="tab-btn" data-tab="health">Health</button>
+          <button class="tab-btn" data-tab="contributors">Contributors</button>
+          <button class="tab-btn" data-tab="trends">Trends</button>
+          <button class="tab-btn" data-tab="alerts">Alerts</button>
+        </div>
+        
+        <!-- Tab Contents -->
+        <div id="dashboard-content" class="tab-content active" data-content="overview"></div>
+        <div id="health-content" class="tab-content" data-content="health"></div>
+        <div id="contributors-content" class="tab-content" data-content="contributors"></div>
+        <div id="trends-content" class="tab-content" data-content="trends"></div>
+        <div id="alerts-content" class="tab-content" data-content="alerts"></div>
+      </section>
+
+      <!-- Repositories Section -->
+      <section id="repos-section" class="content-section hidden">
+        <div class="section-header">
+          <h2>Repositories</h2>
+          <button class="btn btn-primary" id="new-repo-btn">+ New Repository</button>
+          <button class="btn btn-sm btn-outline" id="batch-toggle-btn" title="Batch operations">☑ Batch</button>
+          <button class="btn btn-sm btn-outline" id="export-btn" title="Export repositories">📥 Export</button>
+        </div>
+        <div class="repo-filters">
+          <input type="text" id="repo-search" placeholder="🔍 Search repositories…" class="search-input" />
+          <select id="repo-sort">
+            <option value="updated">📅 Updated</option>
+            <option value="stars">⭐ Stars</option>
+            <option value="forks">🍴 Forks</option>
+            <option value="name">🔤 Name</option>
+            <option value="created">📆 Created</option>
+          </select>
+          <select id="repo-vis-filter">
+            <option value="">👁️ All</option>
+            <option value="public">🌐 Public</option>
+            <option value="private">🔒 Private</option>
+          </select>
+          <select id="repo-lang-filter">
+            <option value="">📝 All Languages</option>
+          </select>
+          <label class="filter-toggle" id="archived-toggle">
+            <input type="checkbox" id="repo-show-archived" />
+            <span>📦 Archived</span>
+          </label>
+        </div>
+        <div id="repos-list" class="card-grid"></div>
+        
+        <!-- Batch Action Bar -->
+        <div id="batch-action-bar" class="batch-action-bar hidden">
+          <span class="batch-count">0 selected</span>
+          <button class="btn btn-sm" id="batch-archive-btn">Archive</button>
+          <button class="btn btn-sm btn-danger" id="batch-delete-btn">Delete</button>
+          <button class="btn btn-sm btn-secondary" id="batch-clear-btn">✕</button>
+        </div>
+      </section>
+
+      <!-- Issues Section -->
+      <section id="issues-section" class="content-section hidden">
+        <div class="section-header">
+          <h2>Issues</h2>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-outline btn-sm" id="issues-batch-toggle-btn" title="Batch operations">☑ Select</button>
+            <button class="btn btn-primary" id="new-issue-btn">+ New Issue</button>
+          </div>
+        </div>
+        <div class="repo-selector-bar">
+          <select id="issues-repo-select" class="repo-select">
+            <option value="">Select a repository...</option>
+          </select>
+          <div class="filter-tabs">
+            <button class="filter-tab active" data-state="open">Open</button>
+            <button class="filter-tab" data-state="closed">Closed</button>
+          </div>
+        </div>
+        <div id="issues-list" class="items-list"></div>
+        <div id="issues-batch-action-bar" class="batch-action-bar hidden">
+          <span class="batch-count">0 selected</span>
+          <button class="btn btn-sm btn-primary" id="issues-batch-close-btn">Close</button>
+          <button class="btn btn-sm btn-secondary" id="issues-batch-reopen-btn">Reopen</button>
+          <button class="btn btn-sm btn-secondary" id="issues-batch-clear-btn">✕</button>
+        </div>
+      </section>
+
+      <!-- Pull Requests Section -->
+      <section id="pulls-section" class="content-section hidden">
+        <div class="section-header">
+          <h2>Pull Requests</h2>
+          <button class="btn btn-primary" id="new-pr-btn">+ New Pull Request</button>
+        </div>
+        <div class="repo-selector-bar">
+          <select id="pulls-repo-select" class="repo-select">
+            <option value="">Select a repository...</option>
+          </select>
+          <div class="filter-tabs">
+            <button class="filter-tab active" data-state="open">Open</button>
+            <button class="filter-tab" data-state="closed">Closed</button>
+            <button class="filter-tab" data-filter="reviews">Reviews</button>
+          </div>
+        </div>
+        <div id="pulls-list" class="items-list"></div>
+        <div id="reviews-dashboard" class="reviews-dashboard hidden">
+          <div class="reviews-stats">
+            <div class="review-stat-card">
+              <div class="review-stat-icon">⏳</div>
+              <div class="review-stat-value" id="pending-count">0</div>
+              <div class="review-stat-label">Pending Your Review</div>
+            </div>
+            <div class="review-stat-card">
+              <div class="review-stat-icon">✅</div>
+              <div class="review-stat-value" id="completed-count">0</div>
+              <div class="review-stat-label">You Approved</div>
+            </div>
+            <div class="review-stat-card">
+              <div class="review-stat-icon">📋</div>
+              <div class="review-stat-value" id="requested-count">0</div>
+              <div class="review-stat-label">Review Requested</div>
+            </div>
+          </div>
+          <div id="reviews-list" class="reviews-list"></div>
+        </div>
+      </section>
+
+      <!-- Gists Section -->
+      <section id="gists-section" class="content-section hidden">
+        <div class="section-header">
+          <h2>Gists</h2>
+          <button class="btn btn-primary" id="new-gist-btn">+ New Gist</button>
+        </div>
+        <div id="gists-list" class="card-grid"></div>
+      </section>
+
+      <!-- Profile Section -->
+      <section id="profile-section" class="content-section hidden">
+        <div class="section-header">
+          <h2>User Profile</h2>
+        </div>
+        <div id="profile-card"></div>
+      </section>
+
+      <!-- Category 5: Organization Section -->
+      <section id="orgs-section" class="content-section hidden">
+        <div class="section-header">
+          <h2>🏢 Organization</h2>
+        </div>
+        <div id="org-info-card"></div>
+        <div class="org-tabs">
+          <button class="tab-btn active" data-org-tab="info">Info</button>
+          <button class="tab-btn" data-org-tab="members">Members</button>
+          <button class="tab-btn" data-org-tab="teams">Teams</button>
+        </div>
+        <div id="org-info-content" class="tab-content active"></div>
+        <div id="org-members-content" class="tab-content"></div>
+        <div id="org-teams-content" class="tab-content"></div>
+      </section>
+
+      <!-- Category 6: Notifications Section -->
+      <section id="notifications-section" class="content-section hidden">
+        <div class="section-header">
+          <h2>🔔 Notifications</h2>
+          <button class="btn btn-secondary btn-sm" id="mark-all-read-btn">Mark All Read</button>
+        </div>
+        <div id="notifications-list" class="notifications-list"></div>
+      </section>
+
+      <!-- Category 9: Actions Section -->
+      <section id="actions-section" class="content-section hidden">
+        <div class="section-header">
+          <h2>⚡ Actions</h2>
+        </div>
+        <div class="repo-selector-bar">
+          <select id="actions-repo-select" class="repo-select">
+            <option value="">Select a repository...</option>
+          </select>
+        </div>
+        <div class="actions-tabs">
+          <button class="tab-btn active" data-actions-tab="workflows">Workflows</button>
+          <button class="tab-btn" data-actions-tab="runs">Runs</button>
+        </div>
+        <div id="actions-workflows-content" class="tab-content active"></div>
+        <div id="actions-runs-content" class="tab-content"></div>
+      </section>
+
+      <!-- Category 11: Labels Section -->
+      <section id="labels-section" class="content-section hidden">
+        <div class="section-header">
+          <h2>🏷️ Labels</h2>
+          <button class="btn btn-primary btn-sm" id="new-label-btn">+ New Label</button>
+        </div>
+        <div class="repo-selector-bar">
+          <select id="labels-repo-select" class="repo-select">
+            <option value="">Select a repository...</option>
+          </select>
+        </div>
+        <div id="labels-list" class="labels-list"></div>
+      </section>
+
+      <!-- Category 11: Milestones Section -->
+      <section id="milestones-section" class="content-section hidden">
+        <div class="section-header">
+          <h2>📍 Milestones</h2>
+          <button class="btn btn-primary btn-sm" id="new-milestone-btn">+ New Milestone</button>
+        </div>
+        <div class="repo-selector-bar">
+          <select id="milestones-repo-select" class="repo-select">
+            <option value="">Select a repository...</option>
+          </select>
+        </div>
+        <div id="milestones-list" class="milestones-list"></div>
+      </section>
+
+      <!-- Category 10: Packages Section -->
+      <section id="packages-section" class="content-section hidden">
+        <div class="section-header">
+          <h2>📦 Packages</h2>
+        </div>
+        <div id="packages-list" class="packages-list"></div>
+      </section>
+
+      <!-- Category 15: Settings Section -->
+      <section id="settings-section" class="content-section hidden">
+        <div class="section-header">
+          <h2>⚙️ Settings</h2>
+        </div>
+        <div class="settings-grid">
+          <div class="settings-card">
+            <h3>Keyboard Shortcuts</h3>
+            <label class="checkbox-label">
+              <input type="checkbox" id="keyboard-shortcuts-enabled" checked />
+              <span>Enable keyboard shortcuts</span>
+            </label>
+            <div class="shortcuts-hint">
+              <p><kbd>/</kbd> Search</p>
+              <p><kbd>n</kbd> New repository</p>
+              <p><kbd>Ctrl+K</kbd> Command palette</p>
+            </div>
+          </div>
+          <div class="settings-card">
+            <h3>Theme</h3>
+            <label class="checkbox-label">
+              <input type="checkbox" id="auto-theme" />
+              <span>Follow system theme</span>
+            </label>
+          </div>
+          <div class="settings-card">
+            <h3>Bookmarks / Favorites</h3>
+            <div id="bookmarks-list" class="bookmarks-list"></div>
+          </div>
+          <div class="settings-card">
+            <h3>Slack Integration</h3>
+            <div class="form-group">
+              <label>Webhook URL</label>
+              <input type="url" id="slack-webhook" placeholder="https://hooks.slack.com/..." />
+            </div>
+            <button class="btn btn-secondary btn-sm" id="save-slack-btn">Save</button>
+          </div>
+          <div class="settings-card">
+            <h3>Data Management</h3>
+            <button class="btn btn-secondary btn-sm" id="backup-data-btn" style="margin-bottom:8px">📥 Backup Data</button>
+            <button class="btn btn-secondary btn-sm" id="export-data-btn">📤 Export All</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Category 13: API Rate Info -->
+      <div id="api-rate-info" class="api-rate-info">API: --/--</div>
+
+      <!-- Category 12: Command Palette -->
+      <div id="command-palette" class="modal-overlay hidden">
+        <div class="modal" style="max-width: 500px;">
+          <div class="modal-body" style="padding:0;">
+            <input type="text" id="command-input" placeholder="Type a command..." style="width:100%;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:16px;font-size:16px;" />
+            <div id="command-results" class="command-results" style="max-height:300px;overflow-y:auto;"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modals -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <!-- New Repo Modal -->
+    <div id="new-repo-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3>Create New Repository</h3>
+        <button class="modal-close" data-modal="new-repo-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Repository Name *</label>
+          <input type="text" id="new-repo-name" placeholder="my-awesome-repo"/>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" id="new-repo-desc" placeholder="Short description..."/>
+        </div>
+        <div class="form-group">
+          <label>Visibility</label>
+          <div class="radio-group">
+            <label class="radio-label"><input type="radio" name="repo-visibility" value="public" checked/> Public</label>
+            <label class="radio-label"><input type="radio" name="repo-visibility" value="private"/> Private</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="new-repo-init"/> Initialize with README
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-modal="new-repo-modal">Cancel</button>
+        <button class="btn btn-primary" id="create-repo-btn">Create Repository</button>
+      </div>
+    </div>
+
+    <!-- New Issue Modal -->
+    <div id="new-issue-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3>Create New Issue</h3>
+        <button class="modal-close" data-modal="new-issue-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Title *</label>
+          <input type="text" id="new-issue-title" placeholder="Issue title..."/>
+        </div>
+        <div class="form-group">
+          <label>Body</label>
+          <textarea id="new-issue-body" placeholder="Describe the issue..." rows="5"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Labels (comma separated)</label>
+          <input type="text" id="new-issue-labels" placeholder="bug, enhancement..."/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-modal="new-issue-modal">Cancel</button>
+        <button class="btn btn-primary" id="create-issue-btn">Create Issue</button>
+      </div>
+    </div>
+
+    <!-- New Gist Modal -->
+    <div id="new-gist-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3>Create New Gist</h3>
+        <button class="modal-close" data-modal="new-gist-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Filename *</label>
+          <input type="text" id="new-gist-filename" placeholder="example.js"/>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" id="new-gist-desc" placeholder="Gist description..."/>
+        </div>
+        <div class="form-group">
+          <label>Content *</label>
+          <textarea id="new-gist-content" placeholder="Paste your code here..." rows="8"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Visibility</label>
+          <div class="radio-group">
+            <label class="radio-label"><input type="radio" name="gist-visibility" value="public" checked/> Public</label>
+            <label class="radio-label"><input type="radio" name="gist-visibility" value="secret"/> Secret</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-modal="new-gist-modal">Cancel</button>
+        <button class="btn btn-primary" id="create-gist-btn">Create Gist</button>
+      </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3 id="confirm-title">Confirm Action</h3>
+        <button class="modal-close" data-modal="confirm-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-message"></p>
+        <div class="form-group" id="confirm-input-group" style="display:none">
+          <label id="confirm-input-label"></label>
+          <input type="text" id="confirm-input" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-modal="confirm-modal">Cancel</button>
+        <button class="btn btn-danger" id="confirm-action-btn">Confirm</button>
+      </div>
+    </div>
+
+    <!-- Repo Detail Modal -->
+    <div id="repo-detail-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3 id="repo-detail-title">Repository Details</h3>
+        <button class="modal-close" data-modal="repo-detail-modal">✕</button>
+      </div>
+      <div class="modal-body" id="repo-detail-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-modal="repo-detail-modal">Close</button>
+      </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="export-modal" class="modal-overlay hidden">
+      <div class="modal" style="max-width: 450px;">
+        <div class="modal-header">
+          <h3>📥 Export Repositories</h3>
+          <button class="modal-close" data-close="export-modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <p style="margin-bottom: 20px; color: var(--text-secondary);">
+            Export <strong id="export-count">0</strong> repositories
+          </p>
+          <div class="form-group">
+            <label>Format</label>
+            <select id="export-format">
+              <option value="csv">CSV (Spreadsheet)</option>
+              <option value="json">JSON (Data)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="export-selected-only" />
+              <span>Export selected only (<span id="export-selected-count">0</span>)</span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-close="export-modal">Cancel</button>
+          <button class="btn btn-primary" id="export-download-btn">📥 Download</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Webhooks Modal -->
+    <div id="webhooks-modal" class="modal-overlay hidden">
+      <div class="modal" style="max-width: 700px;">
+        <div class="modal-header">
+          <h3>📡 Webhooks for <span id="webhooks-repo-name"></span></h3>
+          <button class="modal-close" data-close="webhooks-modal">✕</button>
+        </div>
+        <div class="modal-body" style="max-height: 450px; overflow-y: auto;">
+          <div id="webhooks-list" class="webhook-list"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="add-webhook-btn">+ Add Webhook</button>
+          <button class="btn btn-primary" data-close="webhooks-modal">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add/Edit Webhook Modal -->
+    <div id="webhook-form-modal" class="modal-overlay hidden">
+      <div class="modal" style="max-width: 500px;">
+        <div class="modal-header">
+          <h3 id="webhook-form-title">📡 Add Webhook</h3>
+          <button class="modal-close" data-close="webhook-form-modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Payload URL *</label>
+            <input type="url" id="webhook-url" placeholder="https://example.com/webhook" />
+          </div>
+          <div class="form-group">
+            <label>Content Type</label>
+            <select id="webhook-content-type">
+              <option value="application/json">application/json</option>
+              <option value="application/x-www-form-urlencoded">application/x-www-form-urlencoded</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Secret (optional)</label>
+            <input type="text" id="webhook-secret" placeholder="Webhook secret for signature verification" />
+          </div>
+          <div class="form-group">
+            <label>Events</label>
+            <div class="checkbox-grid">
+              <label class="checkbox-label"><input type="checkbox" value="push" checked /> Push</label>
+              <label class="checkbox-label"><input type="checkbox" value="pull_requests" /> Pull Requests</label>
+              <label class="checkbox-label"><input type="checkbox" value="issues" /> Issues</label>
+              <label class="checkbox-label"><input type="checkbox" value="release" /> Releases</label>
+              <label class="checkbox-label"><input type="checkbox" value="create" /> Create</label>
+              <label class="checkbox-label"><input type="checkbox" value="delete" /> Delete</label>
+              <label class="checkbox-label"><input type="checkbox" value="fork" /> Fork</label>
+              <label class="checkbox-label"><input type="checkbox" value="watch" /> Star</label>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-close="webhook-form-modal">Cancel</button>
+          <button class="btn btn-primary" id="save-webhook-btn">Save Webhook</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Collaborators Modal -->
+    <div id="collaborators-modal" class="modal-overlay hidden">
+      <div class="modal" style="max-width: 550px;">
+        <div class="modal-header">
+          <h3>👥 Collaborators for <span id="collaborators-repo-name"></span></h3>
+          <button class="modal-close" data-close="collaborators-modal">✕</button>
+        </div>
+        <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+          <div id="collaborators-list" class="collaborator-list"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="add-collab-btn">+ Add Collaborator</button>
+          <button class="btn btn-primary" data-close="collaborators-modal">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Collaborator Modal -->
+    <div id="collab-form-modal" class="modal-overlay hidden">
+      <div class="modal" style="max-width: 400px;">
+        <div class="modal-header">
+          <h3>👤 Add Collaborator</h3>
+          <button class="modal-close" data-close="collab-form-modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>GitHub Username *</label>
+            <input type="text" id="collab-username" placeholder="Enter username" />
+          </div>
+          <div class="form-group">
+            <label>Permission</label>
+            <select id="collab-permission">
+              <option value="pull">Pull (Read only)</option>
+              <option value="triage">Triage (Can manage PRs)</option>
+              <option value="push" selected>Push (Read + Write)</option>
+              <option value="maintain">Maintain (Can manage settings)</option>
+              <option value="admin">Admin (Full access)</option>
+            </select>
+          </div>
+          <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+            Note: The user must have a GitHub account and will receive an invitation email.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-close="collab-form-modal">Cancel</button>
+          <button class="btn btn-primary" id="save-collab-btn">Add Collaborator</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Branch Protection Modal -->
+    <div id="protection-modal" class="modal-overlay hidden">
+      <div class="modal" style="max-width: 600px;">
+        <div class="modal-header">
+          <h3>🔒 Branch Protection: <span id="protection-repo-name"></span></h3>
+          <button class="modal-close" data-close="protection-modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Branch</label>
+            <select id="protection-branch" style="max-width: 250px;"></select>
+          </div>
+          <div id="protection-rules" class="protection-rules"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-danger" id="delete-protection-btn">🗑️ Delete Rules</button>
+          <button class="btn btn-primary" id="save-protection-btn">💾 Save Rules</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PR Detail Modal -->
+    <div id="pr-detail-modal" class="modal-overlay hidden">
+      <div class="modal" style="max-width: 800px; max-height: 90vh;">
+        <div class="modal-header">
+          <h3 id="pr-detail-title">Pull Request Details</h3>
+          <button class="modal-close" data-close="pr-detail-modal">✕</button>
+        </div>
+        <div class="modal-body" id="pr-detail-body" style="max-height: 60vh; overflow-y: auto;"></div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-close="pr-detail-modal">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Pull Request Modal -->
+    <div id="new-pr-modal" class="modal-overlay hidden">
+      <div class="modal" style="max-width: 600px;">
+        <div class="modal-header">
+          <h3>Create New Pull Request</h3>
+          <button class="modal-close" data-close="new-pr-modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Title *</label>
+            <input type="text" id="new-pr-title" placeholder="Pull request title..."/>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="new-pr-body" placeholder="Describe your changes..." rows="5"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Base Branch *</label>
+            <select id="new-pr-base"></select>
+          </div>
+          <div class="form-group">
+            <label>Head Branch *</label>
+            <select id="new-pr-head"></select>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="new-pr-draft"/>
+              <span>Draft PR</span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="new-pr-auto-merge"/>
+              <span>Enable auto-merge</span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-close="new-pr-modal">Cancel</button>
+          <button class="btn btn-primary" id="create-pr-btn">Create Pull Request</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Issue Detail Modal -->
+    <div id="issue-detail-modal" class="modal-overlay hidden">
+      <div class="modal" style="max-width: 800px; max-height: 90vh;">
+        <div class="modal-header">
+          <h3 id="issue-detail-title">Issue Details</h3>
+          <button class="modal-close" data-close="issue-detail-modal">✕</button>
+        </div>
+        <div class="modal-body" id="issue-detail-body" style="max-height: 60vh; overflow-y: auto;"></div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-close="issue-detail-modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Three-Dot Dropdown Menu -->
+  <div id="repo-dropdown" class="dropdown-menu hidden">
+    <button class="dropdown-item" data-action="view">
+      <span class="icon">📄</span> View Details
+    </button>
+    <div class="dropdown-divider"></div>
+    <button class="dropdown-item" data-action="webhooks">
+      <span class="icon">📡</span> Webhooks
+    </button>
+    <button class="dropdown-item" data-action="collaborators">
+      <span class="icon">👥</span> Collaborators
+    </button>
+    <button class="dropdown-item" data-action="protection">
+      <span class="icon">🔒</span> Branch Protection
+    </button>
+    <div class="dropdown-divider"></div>
+    <button class="dropdown-item text-danger" data-action="delete">
+      <span class="icon">⚠️</span> Delete Repository
+    </button>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

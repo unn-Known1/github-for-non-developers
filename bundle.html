@@ -1,0 +1,4600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GitHub Manager</title>
+  <style>
+/* === CSS Reset & Variables === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #21262d;
+  --bg-hover: #30363d;
+  --border: #30363d;
+  --border-light: #21262d;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --accent: #238636;
+  --accent-hover: #2ea043;
+  --accent-blue: #1f6feb;
+  --accent-blue-hover: #388bfd;
+  --accent-red: #da3633;
+  --accent-red-hover: #f85149;
+  --accent-orange: #d29922;
+  --accent-purple: #8957e5;
+  --shadow: 0 8px 24px rgba(1,4,9,.6);
+  --radius: 8px;
+  --radius-sm: 4px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --sidebar-width: 240px;
+  --transition: 0.2s ease;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* === Utilities === */
+.hidden { display: none !important; }
+.active { display: flex !important; }
+
+/* === Login Screen === */
+.screen { min-height: 100vh; }
+
+#login-screen {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at top, #0d1a2b 0%, #0d1117 60%);
+  padding: 20px;
+}
+#login-screen.active { display: flex; }
+
+.login-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.login-logo {
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  opacity: 0.9;
+}
+
+.login-card h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  margin-bottom: 28px;
+  font-size: 13px;
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 16px;
+  line-height: 1.6;
+}
+
+/* === Form Elements === */
+.form-group {
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+textarea,
+select {
+  width: 100%;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: var(--font);
+  transition: border-color var(--transition), box-shadow var(--transition);
+  outline: none;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.15);
+}
+
+textarea { resize: vertical; min-height: 80px; }
+
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%238b949e'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 32px;
+  cursor: pointer;
+}
+
+.input-with-toggle {
+  position: relative;
+  display: flex;
+}
+
+.input-with-toggle input {
+  padding-right: 40px;
+  flex: 1;
+}
+
+.toggle-visibility {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  transition: color var(--transition);
+}
+
+.toggle-visibility:hover { color: var(--text-primary); }
+
+/* === Buttons === */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all var(--transition);
+  white-space: nowrap;
+  text-decoration: none;
+  font-family: var(--font);
+}
+
+.btn-block { width: 100%; justify-content: center; }
+
+.btn-primary {
+  background: var(--accent);
+  border-color: rgba(240,246,252,.1);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--accent-hover); }
+
+.btn-secondary {
+  background: var(--bg-tertiary);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+.btn-secondary:hover { background: var(--bg-hover); }
+
+.btn-danger {
+  background: var(--accent-red);
+  border-color: rgba(240,246,252,.1);
+  color: #fff;
+}
+.btn-danger:hover { background: var(--accent-red-hover); }
+
+.btn-outline {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+.btn-outline:hover { background: var(--bg-hover); }
+
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-icon { padding: 6px; border-radius: var(--radius-sm); }
+
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* === Spinner === */
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+  flex-direction: column;
+  gap: 12px;
+}
+
+.loading-overlay .spinner {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
+  border-color: var(--border);
+  border-top-color: var(--accent-blue);
+}
+
+/* === Error Message === */
+.error-msg {
+  color: var(--accent-red-hover);
+  background: rgba(218, 54, 51, 0.1);
+  border: 1px solid rgba(218,54,51,0.3);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-top: 12px;
+  font-size: 13px;
+  text-align: left;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+
+.empty-state svg {
+  opacity: 0.3;
+  margin-bottom: 12px;
+}
+
+.empty-state p { font-size: 15px; }
+
+/* === App Layout === */
+#app-screen {
+  display: none;
+  min-height: 100vh;
+}
+#app-screen.active { display: flex; }
+
+/* === Sidebar === */
+.sidebar {
+  width: var(--sidebar-width);
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 100;
+  transition: transform var(--transition);
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 72px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+}
+
+.user-name {
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-login {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: all var(--transition);
+}
+
+.nav-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.nav-item.active {
+  background: var(--bg-hover);
+  color: var(--accent-blue-hover);
+  font-weight: 500;
+}
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* === Main Content === */
+.main-content {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+  overflow-y: auto;
+  background: var(--bg-primary);
+}
+
+.content-section {
+  display: none;
+  flex-direction: column;
+  padding: 24px;
+  max-width: 1200px;
+}
+
+.content-section.active { display: flex; }
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.section-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* === Search Bar === */
+.search-bar {
+  margin-bottom: 16px;
+}
+
+.search-bar input {
+  max-width: 400px;
+}
+
+/* === Repo Selector Bar === */
+.repo-selector-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.repo-select {
+  max-width: 340px;
+  min-width: 200px;
+}
+
+.filter-tabs {
+  display: flex;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.filter-tab {
+  padding: 7px 14px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  font-family: var(--font);
+  transition: all var(--transition);
+}
+
+.filter-tab:hover { background: var(--bg-hover); color: var(--text-primary); }
+.filter-tab.active { background: var(--accent-blue); color: #fff; }
+
+/* === Card Grid === */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+/* === Repo Card === */
+.repo-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.repo-card:hover {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 1px var(--accent-blue);
+}
+
+.repo-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+
+.repo-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--accent-blue-hover);
+  cursor: pointer;
+  word-break: break-word;
+}
+
+.repo-card-name:hover { text-decoration: underline; }
+
+.repo-card-desc {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.repo-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.repo-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.repo-card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-light);
+}
+
+/* === Badge === */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.badge-public { background: rgba(35,134,54,.15); color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
+.badge-private { background: rgba(210,153,34,.1); color: #d29922; border: 1px solid rgba(210,153,34,.3); }
+.badge-open { background: rgba(35,134,54,.15); color: #3fb950; }
+.badge-closed { background: rgba(139, 148, 158, 0.15); color: #8b949e; }
+.badge-merged { background: rgba(137,87,229,.15); color: #a371f7; }
+
+/* === Items List === */
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-secondary);
+  transition: background var(--transition);
+  cursor: pointer;
+}
+
+.list-item:hover { background: var(--bg-tertiary); }
+
+.list-item-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.list-item-content { flex: 1; min-width: 0; }
+
+.list-item-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.list-item-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.list-item-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* === Lang Dot === */
+.lang-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* === Gist Card === */
+.gist-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  transition: border-color var(--transition);
+}
+
+.gist-card:hover { border-color: var(--accent-blue); }
+
+.gist-filename {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  color: var(--accent-blue-hover);
+  font-weight: 600;
+  margin-bottom: 6px;
+  word-break: break-all;
+}
+
+.gist-desc {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-bottom: 12px;
+  min-height: 16px;
+}
+
+.gist-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.gist-card-actions {
+  display: flex;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-light);
+}
+
+/* === Profile Card === */
+.profile-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+  max-width: 700px;
+}
+
+.profile-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  flex-shrink: 0;
+}
+
+.profile-info { flex: 1; }
+
+.profile-name {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.profile-login {
+  color: var(--text-muted);
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+
+.profile-bio {
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.profile-stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.profile-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 20px;
+  min-width: 80px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.profile-links {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.profile-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* === Modals === */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-overlay.active { display: flex; }
+
+.modal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow);
+  animation: modalIn 0.2s ease;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h3 { font-size: 16px; font-weight: 600; }
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
+  line-height: 1;
+}
+
+.modal-close:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* === Radio & Checkbox === */
+.radio-group {
+  display: flex;
+  gap: 16px;
+}
+
+.radio-label, .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+input[type="radio"], input[type="checkbox"] {
+  width: auto;
+  accent-color: var(--accent-blue);
+}
+
+/* === Repo Detail === */
+.repo-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.repo-detail-item {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+}
+
+.repo-detail-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.repo-detail-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* === Toast Notifications === */
+#toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 13px;
+  box-shadow: var(--shadow);
+  animation: toastIn 0.3s ease;
+  pointer-events: all;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 360px;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.toast.success { border-left: 3px solid var(--accent-hover); }
+.toast.error { border-left: 3px solid var(--accent-red-hover); }
+.toast.info { border-left: 3px solid var(--accent-blue); }
+
+/* === Responsive === */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: 260px;
+  }
+
+  .sidebar.open { transform: translateX(0); }
+
+  .hamburger { display: block; }
+
+  .main-content { margin-left: 0; }
+
+  .content-section { padding: 16px; }
+
+  .card-grid { grid-template-columns: 1fr; }
+
+  .profile-card { flex-direction: column; align-items: center; text-align: center; }
+
+  .profile-stats { justify-content: center; }
+
+  .repo-detail-grid { grid-template-columns: 1fr; }
+
+  .section-header { flex-direction: column; align-items: flex-start; }
+
+  .mobile-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-header { display: none !important; }
+}
+
+/* === Scrollbar === */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--bg-hover); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* === Divider === */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 16px 0;
+}
+
+/* === Issue/PR detail panel === */
+.item-detail {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 8px;
+}
+
+.item-detail-body {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Mobile header overlay */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 99;
+}
+
+.sidebar-backdrop.active { display: block; }
+
+[data-theme="light"] {
+  --bg-primary: #f6f8fa;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f0f2f5;
+  --bg-hover: #e8eaed;
+  --border: #d0d7de;
+  --border-light: #e8eaed;
+  --text-primary: #24292f;
+  --text-secondary: #57606a;
+  --text-muted: #8c959f;
+  --accent: #1a7f37;
+  --accent-hover: #1e8840;
+  --accent-blue: #0969da;
+  --accent-blue-hover: #0550ae;
+  --accent-red: #cf222e;
+  --accent-red-hover: #a40e26;
+  --accent-orange: #9a6700;
+  --accent-purple: #6639ba;
+  --shadow: 0 8px 24px rgba(140,149,159,0.2);
+}
+
+[data-theme="light"] body { background: var(--bg-primary); color: var(--text-primary); }
+[data-theme="light"] #login-screen { background: radial-gradient(ellipse at top, #dbeafe 0%, #f6f8fa 60%); }
+[data-theme="light"] .spinner { border-color: rgba(0,0,0,0.15); border-top-color: #0969da; }
+[data-theme="light"] .loading-overlay .spinner { border-color: var(--border); border-top-color: var(--accent-blue); }
+[data-theme="light"] select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%2357606a'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); }
+
+.search-filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.search-filter-bar .search-input { flex: 1; min-width: 180px; max-width: 340px; }
+.search-filter-bar select { min-width: 130px; max-width: 180px; padding: 8px 32px 8px 10px; font-size: 13px; }
+
+.dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; margin-bottom: 28px; }
+.dashboard-stat-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 16px; text-align: center; transition: border-color var(--transition), transform var(--transition); }
+.dashboard-stat-card:hover { border-color: var(--accent-blue); transform: translateY(-2px); }
+.dash-stat-icon { font-size: 28px; margin-bottom: 8px; }
+.dash-stat-value { font-size: 28px; font-weight: 700; color: var(--text-primary); line-height: 1; margin-bottom: 6px; }
+.dash-stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+.dashboard-panels { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.dashboard-panel { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.panel-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border-light); }
+
+.lang-bars { display: flex; flex-direction: column; gap: 10px; }
+.lang-bar-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.lang-bar-name { min-width: 80px; color: var(--text-secondary); font-size: 12px; }
+.lang-bar-track { flex: 1; background: var(--bg-tertiary); border-radius: 4px; height: 8px; overflow: hidden; }
+.lang-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+.lang-bar-count { min-width: 24px; text-align: right; color: var(--text-muted); font-size: 12px; }
+
+.activity-list { display: flex; flex-direction: column; gap: 12px; }
+.activity-item { display: flex; align-items: flex-start; gap: 10px; }
+.activity-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.activity-body { flex: 1; min-width: 0; }
+.activity-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.4; word-break: break-word; }
+.activity-desc strong { color: var(--text-primary); }
+.activity-time { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+.top-repos-list { display: flex; flex-direction: column; gap: 10px; }
+.top-repo-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--bg-tertiary); border-radius: var(--radius-sm); border: 1px solid var(--border-light); }
+.top-repo-info { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.top-repo-name { font-size: 13px; font-weight: 600; color: var(--accent-blue-hover); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+.top-repo-name:hover { text-decoration: underline; }
+.top-repo-stars { font-size: 12px; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; }
+
+@media (max-width: 768px) {
+  .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-panels { grid-template-columns: 1fr; }
+  .search-filter-bar { flex-direction: column; align-items: stretch; }
+  .search-filter-bar .search-input, .search-filter-bar select { max-width: 100%; width: 100%; }
+}
+
+.dashboard-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 24px; overflow-x: auto; scrollbar-width: none; }
+.dashboard-tabs::-webkit-scrollbar { display: none; }
+.tab-btn { padding: 12px 20px; background: none; border: none; color: var(--text-secondary); cursor: pointer; white-space: nowrap; position: relative; transition: color var(--transition); font-size: 14px; font-weight: 500; }
+.tab-btn:hover { color: var(--text-primary); }
+.tab-btn.active { color: var(--accent-blue-hover); }
+.tab-btn.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--accent-blue); border-radius: 2px 2px 0 0; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.health-controls { margin-bottom: 20px; }
+.health-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.metric-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; transition: border-color var(--transition), transform var(--transition); }
+.metric-card:hover { border-color: var(--accent-blue); transform: translateY(-2px); }
+.metric-value { font-size: 36px; font-weight: 700; color: var(--text-primary); line-height: 1; margin-bottom: 8px; }
+.metric-label { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; }
+.metric-detail { font-size: 12px; color: var(--text-secondary); }
+
+.commit-chart { display: flex; align-items: flex-end; gap: 3px; height: 60px; padding: 8px 0; }
+.commit-week { flex: 1; background: var(--accent); border-radius: 2px; min-height: 4px; transition: height 0.3s ease, background 0.2s ease; }
+.commit-week:hover { background: var(--accent-hover); }
+.commit-chart-empty { display: flex; align-items: center; justify-content: center; height: 60px; color: var(--text-muted); font-size: 13px; }
+
+.contributors-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.contributor-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: flex; gap: 16px; transition: border-color var(--transition); }
+.contributor-card:hover { border-color: var(--accent-blue); }
+.contributor-avatar { width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; }
+.contributor-info { flex: 1; min-width: 0; }
+.contributor-name { display: block; font-size: 15px; font-weight: 600; color: var(--accent-blue-hover); margin-bottom: 4px; }
+.contributor-name:hover { text-decoration: underline; }
+.contributor-meta { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+.contributor-bar-container { display: flex; align-items: center; gap: 8px; }
+.contributor-bar { flex: 1; height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden; }
+.contributor-fill { height: 100%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-blue-hover)); border-radius: 4px; transition: width 0.5s ease; }
+.contributor-percent { font-size: 13px; font-weight: 600; color: var(--text-primary); min-width: 40px; text-align: right; }
+
+.trends-controls { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.trends-controls select { min-width: 140px; }
+.trends-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.trend-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; transition: border-color var(--transition), transform var(--transition); }
+.trend-card:hover { border-color: var(--accent-blue); transform: translateY(-2px); }
+.trend-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; gap: 12px; }
+.trend-name { font-size: 16px; font-weight: 600; color: var(--accent-blue-hover); word-break: break-word; }
+.trend-name:hover { text-decoration: underline; }
+.trend-stats { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 12px; }
+.trend-stat { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); }
+.trend-stat-icon { font-size: 14px; }
+.trend-change { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+.trend-change.positive { background: rgba(35, 134, 54, 0.15); color: #3fb950; }
+.trend-description { font-size: 13px; color: var(--text-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+.alerts-controls { margin-bottom: 20px; }
+.alerts-list { display: flex; flex-direction: column; gap: 12px; }
+.alert-card { display: flex; gap: 16px; padding: 20px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); transition: border-color var(--transition); }
+.alert-card:hover { border-color: var(--accent-blue); }
+.alert-card.severity-critical { border-left: 4px solid var(--accent-red); }
+.alert-card.severity-high { border-left: 4px solid #f85149; }
+.alert-card.severity-medium { border-left: 4px solid var(--accent-orange); }
+.alert-card.severity-low { border-left: 4px solid #8b949f; }
+.alert-icon { font-size: 24px; flex-shrink: 0; }
+.alert-content { flex: 1; min-width: 0; }
+.alert-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+.alert-meta { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+.alert-meta span { display: inline-block; margin-right: 12px; }
+.alert-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.alert-severity-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+.alert-severity-badge.critical { background: rgba(218, 54, 51, 0.15); color: #f85149; }
+.alert-severity-badge.high { background: rgba(248, 81, 73, 0.15); color: #f85149; }
+.alert-severity-badge.medium { background: rgba(210, 153, 34, 0.15); color: #d29922; }
+.alert-severity-badge.low { background: rgba(139, 148, 158, 0.15); color: #8b949e; }
+.permission-warning { background: rgba(210, 153, 34, 0.1); border: 1px solid rgba(210, 153, 34, 0.3); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--accent-orange); }
+
+/* === Batch Operations === */
+.batch-checkbox { display: none; align-items: center; }
+.batch-checkbox input { cursor: pointer; }
+.repo-card.selected { background: rgba(31, 111, 235, 0.1); border-color: var(--accent-blue); }
+.batch-action-bar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-secondary);
+  border: 1px solid var(--accent-blue);
+  border-radius: var(--radius);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--shadow);
+  z-index: 100;
+}
+#batch-count { font-weight: 500; color: var(--text-primary); }
+
+/* === Filter Bar === */
+.repo-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+.repo-filters .search-input { max-width: 200px; }
+.repo-filters select { min-width: 120px; }
+.filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.filter-toggle input { cursor: pointer; }
+
+/* === Three-Dot Menu === */
+.repo-actions { position: relative; }
+.repo-menu-btn { font-size: 18px; font-weight: bold; padding: 4px 8px; }
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  min-width: 180px;
+  box-shadow: var(--shadow);
+  z-index: 100;
+  padding: 4px 0;
+}
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 8px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 14px;
+  cursor: pointer;
+}
+.dropdown-item:hover { background: var(--bg-hover); }
+.dropdown-item.text-danger { color: var(--accent-red); }
+.dropdown-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+/* === Webhook Modal === */
+.webhook-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; }
+.webhook-url { flex: 1; font-family: monospace; font-size: 12px; color: var(--text-secondary); word-break: break-all; }
+.webhook-events { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0; }
+.webhook-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.checkbox-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+
+/* === Collaborator Modal === */
+.collab-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; }
+.collab-avatar { width: 32px; height: 32px; border-radius: 50%; }
+.collab-name { flex: 1; font-weight: 500; }
+
+/* === Branch Protection Modal === */
+#protection-rules .form-group { margin-bottom: 12px; }
+#protection-rules input[type="range"] { width: 100%; margin-top: 8px; }
+
+/* === Export Modal === */
+.export-options { display: flex; flex-direction: column; gap: 12px; }
+
+/* === PR Reviews Tab === */
+.pr-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.pr-tab { padding: 10px 16px; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 13px; font-weight: 500; position: relative; transition: color var(--transition); }
+.pr-tab:hover { color: var(--text-primary); }
+.pr-tab.active { color: var(--accent-blue-hover); }
+.pr-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--accent-blue); }
+.pr-tab-content { display: none; }
+.pr-tab-content.active { display: block; }
+
+/* === Reviews Dashboard === */
+.reviews-dashboard { margin-bottom: 24px; }
+.reviews-stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.reviews-stat-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; transition: border-color var(--transition); }
+.reviews-stat-card:hover { border-color: var(--accent-blue); }
+.reviews-stat-value { font-size: 28px; font-weight: 700; color: var(--text-primary); line-height: 1; margin-bottom: 4px; }
+.reviews-stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.reviews-stat-icon { font-size: 20px; margin-bottom: 6px; }
+
+/* === PR Detail Modal === */
+#pr-detail-modal { max-width: 700px; }
+.pr-detail-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+.pr-detail-title { font-size: 18px; font-weight: 600; color: var(--text-primary); flex: 1; word-break: break-word; }
+.pr-detail-meta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; font-size: 13px; color: var(--text-secondary); }
+.pr-detail-body { margin-bottom: 16px; }
+.pr-detail-section { margin-bottom: 20px; }
+.pr-detail-section-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light); }
+.pr-review-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; }
+.pr-review-avatar { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; }
+.pr-review-content { flex: 1; min-width: 0; }
+.pr-review-author { font-weight: 600; color: var(--text-primary); font-size: 13px; margin-bottom: 4px; }
+.pr-review-state { font-size: 12px; margin-bottom: 6px; }
+.pr-review-state.approved { color: #3fb950; }
+.pr-review-state.changes_requested { color: #f85149; }
+.pr-review-state.commented { color: var(--text-secondary); }
+.pr-review-state.pending { color: var(--accent-orange); }
+.pr-review-body { font-size: 13px; color: var(--text-secondary); line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.pr-comment-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; }
+.pr-comment-avatar { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; }
+.pr-comment-content { flex: 1; min-width: 0; }
+.pr-comment-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; }
+.pr-comment-author { font-weight: 600; color: var(--text-primary); }
+.pr-comment-date { color: var(--text-muted); }
+.pr-comment-body { font-size: 13px; color: var(--text-secondary); line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.pr-label { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500; margin-right: 4px; margin-bottom: 4px; }
+.pr-assignee { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 16px; font-size: 12px; margin-right: 6px; margin-bottom: 6px; }
+.pr-assignee img { width: 20px; height: 20px; border-radius: 50%; }
+.pr-branches { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+.pr-branch-arrow { color: var(--text-muted); }
+
+/* === Create PR Modal === */
+#create-pr-modal { max-width: 600px; }
+.create-pr-section { margin-bottom: 16px; }
+.create-pr-section-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; }
+.create-pr-options { display: flex; flex-direction: column; gap: 10px; }
+.create-pr-option { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; transition: border-color var(--transition); }
+.create-pr-option:hover { border-color: var(--accent-blue); }
+.create-pr-option.selected { border-color: var(--accent-blue); background: rgba(31, 111, 235, 0.1); }
+.create-pr-option input { display: none; }
+.create-pr-option-icon { font-size: 18px; }
+.create-pr-option-text { flex: 1; }
+.create-pr-option-title { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+.create-pr-option-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+@media (max-width: 768px) {
+  .reviews-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* === Issue Enhancements === */
+.issue-expand-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; font-size: 12px; transition: transform var(--transition); display: flex; align-items: center; justify-content: center; }
+.issue-expand-btn.expanded { transform: rotate(90deg); }
+.list-item-header { display: flex; align-items: flex-start; gap: 12px; width: 100%; }
+.list-item-header .list-item-icon { flex-shrink: 0; }
+.list-item-header .list-item-content { flex: 1; min-width: 0; }
+.issue-expanded-content { display: none; padding: 16px; margin: 8px 0 0 36px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.issue-expanded-content.show { display: block; }
+.issue-description { color: var(--text-secondary); font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; margin-bottom: 16px; }
+.issue-meta-section { margin-bottom: 12px; }
+.issue-meta-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.issue-labels { display: flex; flex-wrap: wrap; gap: 6px; }
+.issue-label { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+.issue-label-remove { cursor: pointer; opacity: 0.7; font-size: 14px; line-height: 1; }
+.issue-label-remove:hover { opacity: 1; }
+.issue-assignees { display: flex; flex-wrap: wrap; gap: 8px; }
+.issue-assignee { display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 16px; font-size: 12px; }
+.issue-assignee img { width: 20px; height: 20px; border-radius: 50%; }
+.issue-assignee-remove { cursor: pointer; color: var(--text-muted); font-size: 14px; }
+.issue-assignee-remove:hover { color: var(--accent-red); }
+.issue-milestone { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(137, 87, 229, 0.15); border: 1px solid rgba(137, 87, 229, 0.3); border-radius: 12px; font-size: 12px; color: #a371f7; }
+
+.issue-detail-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.issue-detail-status { flex-shrink: 0; }
+.issue-detail-title { font-size: 18px; font-weight: 600; color: var(--text-primary); flex: 1; word-break: break-word; }
+.issue-detail-meta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; font-size: 13px; color: var(--text-secondary); }
+.issue-detail-body { margin-bottom: 20px; }
+.issue-detail-section { margin-bottom: 20px; }
+.issue-detail-section-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light); }
+.issue-comments-list { display: flex; flex-direction: column; gap: 12px; }
+.issue-comment-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.issue-comment-avatar { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; }
+.issue-comment-content { flex: 1; min-width: 0; }
+.issue-comment-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; }
+.issue-comment-author { font-weight: 600; color: var(--text-primary); }
+.issue-comment-date { color: var(--text-muted); }
+.issue-comment-body { font-size: 13px; color: var(--text-secondary); line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.issue-detail-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+.issue-comment-form { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+.issue-comment-form h4 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+.issue-comment-form textarea { width: 100%; min-height: 100px; margin-bottom: 12px; }
+.issue-comment-form .btn { display: inline-flex; }
+
+.issues-batch-mode .batch-checkbox { display: flex; }
+.issues-batch-mode .issue-checkbox { display: flex; align-items: center; margin-right: 12px; }
+.issue-item.selected { background: rgba(31, 111, 235, 0.1); }
+#issues-batch-action-bar .batch-count { font-size: 14px; font-weight: 500; color: var(--text-primary); min-width: 100px; }
+
+</style>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="login-screen" class="screen active">
+    <div class="login-card">
+      <div class="login-logo">
+        <svg height="64" viewBox="0 0 16 16" width="64" fill="currentColor">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+            0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52
+            -.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2
+            -3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82
+            .64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08
+            2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01
+            1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>
+      </div>
+      <h1>GitHub Manager</h1>
+      <p class="subtitle">Manage your GitHub with a Personal Access Token</p>
+      <div class="form-group">
+        <label for="pat-input">Personal Access Token</label>
+        <div class="input-with-toggle">
+          <input type="password" id="pat-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" />
+          <button class="toggle-visibility" id="toggle-pat" title="Show/Hide token">
+            <svg id="eye-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <button id="login-btn" class="btn btn-primary btn-block">
+        <span id="login-text">Connect to GitHub</span>
+        <span id="login-spinner" class="spinner hidden"></span>
+      </button>
+      <div id="login-error" class="error-msg hidden"></div>
+      <p class="hint">Your token is stored only in your browser session and never sent to any server other than api.github.com</p>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="app-screen" class="screen hidden">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="user-info" id="user-info">
+          <img id="user-avatar" src="" alt="avatar" class="avatar"/>
+          <div>
+            <div id="user-name" class="user-name"></div>
+            <div id="user-login" class="user-login"></div>
+          </div>
+        </div>
+        <button class="hamburger" id="sidebar-toggle">☰</button>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-section="repos">
+          <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor"><path d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V2.5a1 1 0 011-1h8zM5 12.25v3.25a.25.25 0 00.4.2l1.45-1.087a.25.25 0 01.3 0L8.6 15.7a.25.25 0 00.4-.2v-3.25a.25.25 0 00-.25-.25h-3.5a.25.25 0 00-.25.25z"/></svg>
+          Repositories
+        </button>
+        <button class="nav-item" data-section="issues">
+          <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor"><path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/><path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"/></svg>
+          Issues
+        </button>
+        <button class="nav-item" data-section="pulls">
+          <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor"><path fill-rule="evenodd" d="M7.177 3.073L9.573.677A.25.25 0 0110 .854v4.792a.25.25 0 01-.427.177L7.177 3.427a.25.25 0 010-.354zM3.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122v5.256a2.251 2.251 0 11-1.5 0V5.372A2.25 2.25 0 011.5 3.25zM11 2.5h-1V4h1a1 1 0 011 1v5.628a2.251 2.251 0 101.5 0V5A2.5 2.5 0 0011 2.5zm1 10.25a.75.75 0 111.5 0 .75.75 0 01-1.5 0zM3.75 12a.75.75 0 100 1.5.75.75 0 000-1.5z"/></svg>
+          Pull Requests
+        </button>
+        <button class="nav-item" data-section="gists">
+          <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor"><path fill-rule="evenodd" d="M14 1H2a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V2a1 1 0 00-1-1zM2 0a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V2a2 2 0 00-2-2H2z"/><path d="M6.854 4.646a.5.5 0 010 .708L4.207 8l2.647 2.646a.5.5 0 01-.708.708l-3-3a.5.5 0 010-.708l3-3a.5.5 0 01.708 0zm2.292 0a.5.5 0 000 .708L11.793 8l-2.647 2.646a.5.5 0 00.708.708l3-3a.5.5 0 000-.708l-3-3a.5.5 0 00-.708 0z"/></svg>
+          Gists
+        </button>
+        <button class="nav-item" data-section="dashboard">
+          <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor"><path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/><path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"/></svg>
+          Dashboard
+        </button>
+        <button class="nav-item" data-section="profile">
+          <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor"><path fill-rule="evenodd" d="M10.5 5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zm.061 3.073a4 4 0 10-5.123 0 6.004 6.004 0 00-3.431 5.142.75.75 0 001.498.07 4.5 4.5 0 018.99 0 .75.75 0 001.498-.07 6.005 6.005 0 00-3.432-5.142z"/></svg>
+          Profile
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <button id="theme-toggle-btn" class="btn btn-secondary btn-block" style="margin-bottom:8px" title="Toggle Theme">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+          Toggle Theme
+        </button>
+        <button id="logout-btn" class="btn btn-danger btn-block">
+          <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path fill-rule="evenodd" d="M2 2.75C2 1.784 2.784 1 3.75 1h2.5a.75.75 0 010 1.5h-2.5a.25.25 0 00-.25.25v10.5c0 .138.112.25.25.25h2.5a.75.75 0 010 1.5h-2.5A1.75 1.75 0 012 13.25V2.75zm10.44 4.5H6.75a.75.75 0 000 1.5h5.69l-1.97 1.97a.75.75 0 101.06 1.06l3.25-3.25a.75.75 0 000-1.06l-3.25-3.25a.75.75 0 10-1.06 1.06l1.97 1.97z"/></svg>
+          Logout
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Repositories Section -->
+      <section id="repos-section" class="content-section active">
+        <div class="section-header">
+          <h2>Repositories</h2>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-sm btn-outline" id="export-btn">📥 Export</button>
+            <button class="btn btn-sm btn-outline" id="batch-toggle-btn">☑ Batch</button>
+            <button class="btn btn-primary" id="new-repo-btn">+ New Repository</button>
+          </div>
+        </div>
+        <div class="repo-filters">
+          <label class="batch-checkbox" style="margin-right: 8px;">
+            <input type="checkbox" id="batch-select-all" />
+          </label>
+          <input type="text" id="repo-search" placeholder="Search repositories..." class="search-input" />
+          <select id="repo-sort">
+            <option value="updated">Sort: Updated</option>
+            <option value="stars">Stars</option>
+            <option value="forks">Forks</option>
+            <option value="name">Name</option>
+          </select>
+          <select id="repo-lang-filter">
+            <option value="">All Languages</option>
+          </select>
+          <select id="repo-vis-filter">
+            <option value="">All</option>
+            <option value="public">Public</option>
+            <option value="private">Private</option>
+          </select>
+          <label class="filter-toggle">
+            <input type="checkbox" id="repo-show-archived" />
+            <span>Archived</span>
+          </label>
+        </div>
+        <div id="repos-list" class="card-grid"></div>
+        <div id="batch-action-bar" class="batch-action-bar hidden">
+          <span id="batch-count">0 selected</span>
+          <button class="btn btn-sm btn-secondary" id="batch-archive-btn">Archive</button>
+          <button class="btn btn-sm btn-danger" id="batch-delete-btn">Delete</button>
+          <button class="btn btn-sm btn-secondary" id="batch-clear-btn">✕</button>
+        </div>
+      </section>
+
+      <!-- Issues Section -->
+      <section id="issues-section" class="content-section hidden">
+        <div class="section-header">
+          <h2>Issues</h2>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-outline btn-sm" id="issues-batch-toggle-btn" title="Batch operations">☑ Select</button>
+            <button class="btn btn-primary" id="new-issue-btn">+ New Issue</button>
+          </div>
+        </div>
+        <div class="repo-selector-bar">
+          <select id="issues-repo-select" class="repo-select">
+            <option value="">Select a repository...</option>
+          </select>
+          <div class="filter-tabs">
+            <button class="filter-tab active" data-state="open">Open</button>
+            <button class="filter-tab" data-state="closed">Closed</button>
+          </div>
+        </div>
+        <div id="issues-list" class="items-list"></div>
+        <div id="issues-batch-action-bar" class="batch-action-bar hidden">
+          <span class="batch-count">0 selected</span>
+          <button class="btn btn-sm btn-primary" id="issues-batch-close-btn">Close</button>
+          <button class="btn btn-sm btn-secondary" id="issues-batch-reopen-btn">Reopen</button>
+          <button class="btn btn-sm btn-secondary" id="issues-batch-clear-btn">✕</button>
+        </div>
+      </section>
+
+      <!-- Pull Requests Section -->
+      <section id="pulls-section" class="content-section hidden">
+        <div class="section-header">
+          <h2>Pull Requests</h2>
+          <button class="btn btn-primary" id="new-pr-btn">+ New Pull Request</button>
+        </div>
+        <div class="repo-selector-bar">
+          <select id="pulls-repo-select" class="repo-select">
+            <option value="">Select a repository...</option>
+          </select>
+          <div class="filter-tabs">
+            <button class="filter-tab active" data-state="open">Open</button>
+            <button class="filter-tab" data-state="closed">Closed</button>
+          </div>
+        </div>
+        <div class="pr-tabs">
+          <button class="pr-tab active" data-pr-tab="list">All PRs</button>
+          <button class="pr-tab" data-pr-tab="reviews">Reviews Dashboard</button>
+        </div>
+        <div id="pr-list-view" class="pr-tab-content active">
+          <div id="pulls-list" class="items-list"></div>
+        </div>
+        <div id="pr-reviews-view" class="pr-tab-content">
+          <div class="reviews-dashboard">
+            <div class="reviews-stats-grid" id="reviews-stats-grid"></div>
+            <div id="reviews-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Gists Section -->
+      <section id="gists-section" class="content-section hidden">
+        <div class="section-header">
+          <h2>Gists</h2>
+          <button class="btn btn-primary" id="new-gist-btn">+ New Gist</button>
+        </div>
+        <div id="gists-list" class="card-grid"></div>
+      </section>
+
+      <!-- Dashboard Section -->
+      <section id="dashboard-section" class="content-section hidden">
+        <div class="section-header">
+          <h2>📊 Dashboard</h2>
+          <button id="dashboard-refresh-btn" class="btn btn-secondary btn-sm" title="Refresh Data">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+              <path d="M8 3a5 5 0 104.546 2.914.5.5 0 01.908-.418A6 6 0 118 2v1z"/>
+              <path d="M8 4.466V.534a.25.25 0 01.41-.192l2.36 1.966a.25.25 0 010 .384L8.41 4.658A.25.25 0 018 4.466z"/>
+            </svg>
+            Refresh
+          </button>
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div class="dashboard-tabs">
+          <button class="tab-btn active" data-tab="overview">Overview</button>
+          <button class="tab-btn" data-tab="health">Health</button>
+          <button class="tab-btn" data-tab="contributors">Contributors</button>
+          <button class="tab-btn" data-tab="trends">Trends</button>
+          <button class="tab-btn" data-tab="alerts">Alerts</button>
+        </div>
+        
+        <!-- Tab Contents -->
+        <div id="dashboard-content" class="tab-content active" data-content="overview"></div>
+        <div id="health-content" class="tab-content" data-content="health"></div>
+        <div id="contributors-content" class="tab-content" data-content="contributors"></div>
+        <div id="trends-content" class="tab-content" data-content="trends"></div>
+        <div id="alerts-content" class="tab-content" data-content="alerts"></div>
+      </section>
+
+      <!-- Profile Section -->
+      <section id="profile-section" class="content-section hidden">
+        <div class="section-header">
+          <h2>User Profile</h2>
+        </div>
+        <div id="profile-card"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modals -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <!-- New Repo Modal -->
+    <div id="new-repo-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3>Create New Repository</h3>
+        <button class="modal-close" data-modal="new-repo-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Repository Name *</label>
+          <input type="text" id="new-repo-name" placeholder="my-awesome-repo"/>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" id="new-repo-desc" placeholder="Short description..."/>
+        </div>
+        <div class="form-group">
+          <label>Visibility</label>
+          <div class="radio-group">
+            <label class="radio-label"><input type="radio" name="repo-visibility" value="public" checked/> Public</label>
+            <label class="radio-label"><input type="radio" name="repo-visibility" value="private"/> Private</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="new-repo-init"/> Initialize with README
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-modal="new-repo-modal">Cancel</button>
+        <button class="btn btn-primary" id="create-repo-btn">Create Repository</button>
+      </div>
+    </div>
+
+    <!-- New Issue Modal -->
+    <div id="new-issue-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3>Create New Issue</h3>
+        <button class="modal-close" data-modal="new-issue-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Title *</label>
+          <input type="text" id="new-issue-title" placeholder="Issue title..."/>
+        </div>
+        <div class="form-group">
+          <label>Body</label>
+          <textarea id="new-issue-body" placeholder="Describe the issue..." rows="5"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Labels (comma separated)</label>
+          <input type="text" id="new-issue-labels" placeholder="bug, enhancement..."/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-modal="new-issue-modal">Cancel</button>
+        <button class="btn btn-primary" id="create-issue-btn">Create Issue</button>
+      </div>
+    </div>
+
+    <!-- New Gist Modal -->
+    <div id="new-gist-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3>Create New Gist</h3>
+        <button class="modal-close" data-modal="new-gist-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Filename *</label>
+          <input type="text" id="new-gist-filename" placeholder="example.js"/>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" id="new-gist-desc" placeholder="Gist description..."/>
+        </div>
+        <div class="form-group">
+          <label>Content *</label>
+          <textarea id="new-gist-content" placeholder="Paste your code here..." rows="8"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Visibility</label>
+          <div class="radio-group">
+            <label class="radio-label"><input type="radio" name="gist-visibility" value="public" checked/> Public</label>
+            <label class="radio-label"><input type="radio" name="gist-visibility" value="secret"/> Secret</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-modal="new-gist-modal">Cancel</button>
+        <button class="btn btn-primary" id="create-gist-btn">Create Gist</button>
+      </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3 id="confirm-title">Confirm Action</h3>
+        <button class="modal-close" data-modal="confirm-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-message"></p>
+        <div class="form-group" id="confirm-input-group" style="display:none">
+          <label id="confirm-input-label"></label>
+          <input type="text" id="confirm-input" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-modal="confirm-modal">Cancel</button>
+        <button class="btn btn-danger" id="confirm-action-btn">Confirm</button>
+      </div>
+    </div>
+
+    <!-- Repo Detail Modal -->
+    <div id="repo-detail-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3 id="repo-detail-title">Repository Details</h3>
+        <button class="modal-close" data-modal="repo-detail-modal">✕</button>
+      </div>
+      <div class="modal-body" id="repo-detail-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-modal="repo-detail-modal">Close</button>
+      </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="export-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3>Export Repositories</h3>
+        <button class="modal-close" data-modal="export-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 16px;">Export <span id="export-count">0</span> repositories</p>
+        <div class="form-group">
+          <label>Format</label>
+          <select id="export-format">
+            <option value="csv">CSV</option>
+            <option value="json">JSON</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="export-selected" />
+            <span>Export selected only</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-modal="export-modal">Cancel</button>
+        <button class="btn btn-primary" id="export-download-btn">Download</button>
+      </div>
+    </div>
+
+    <!-- Three-Dot Dropdown Menu -->
+    <div id="repo-dropdown" class="dropdown-menu hidden">
+      <button class="dropdown-item" data-action="view">View Details</button>
+      <div class="dropdown-divider"></div>
+      <button class="dropdown-item" data-action="webhooks">📡 Webhooks</button>
+      <button class="dropdown-item" data-action="collaborators">👥 Collaborators</button>
+      <button class="dropdown-item" data-action="protection">🔒 Branch Protection</button>
+      <div class="dropdown-divider"></div>
+      <button class="dropdown-item text-danger" data-action="delete">⚠️ Delete</button>
+    </div>
+
+    <!-- Webhooks Modal -->
+    <div id="webhooks-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3>Webhooks for <span id="webhooks-repo-name"></span></h3>
+        <button class="modal-close" data-modal="webhooks-modal">✕</button>
+      </div>
+      <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+        <div id="webhooks-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="add-webhook-btn">+ Add Webhook</button>
+        <button class="btn btn-primary" data-modal="webhooks-modal">Done</button>
+      </div>
+    </div>
+
+    <!-- Webhook Form Modal -->
+    <div id="webhook-form-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3 id="webhook-form-title">Add Webhook</h3>
+        <button class="modal-close" data-modal="webhook-form-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Payload URL *</label>
+          <input type="url" id="webhook-url" placeholder="https://example.com/webhook" />
+        </div>
+        <div class="form-group">
+          <label>Content Type</label>
+          <select id="webhook-content-type">
+            <option value="application/json">application/json</option>
+            <option value="application/x-www-form-urlencoded">application/x-www-form-urlencoded</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Secret (optional)</label>
+          <input type="text" id="webhook-secret" placeholder="Webhook secret" />
+        </div>
+        <div class="form-group">
+          <label>Events</label>
+          <div class="checkbox-grid">
+            <label class="checkbox-label"><input type="checkbox" value="push" checked /> Push</label>
+            <label class="checkbox-label"><input type="checkbox" value="pull_requests" /> Pull Requests</label>
+            <label class="checkbox-label"><input type="checkbox" value="issues" /> Issues</label>
+            <label class="checkbox-label"><input type="checkbox" value="release" /> Releases</label>
+            <label class="checkbox-label"><input type="checkbox" value="create" /> Create</label>
+            <label class="checkbox-label"><input type="checkbox" value="delete" /> Delete</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-modal="webhook-form-modal">Cancel</button>
+        <button class="btn btn-primary" id="save-webhook-btn">Save</button>
+      </div>
+    </div>
+
+    <!-- Collaborators Modal -->
+    <div id="collaborators-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3>Collaborators for <span id="collaborators-repo-name"></span></h3>
+        <button class="modal-close" data-modal="collaborators-modal">✕</button>
+      </div>
+      <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+        <div id="collaborators-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="add-collab-btn">+ Add Collaborator</button>
+        <button class="btn btn-primary" data-modal="collaborators-modal">Done</button>
+      </div>
+    </div>
+
+    <!-- Collaborator Form Modal -->
+    <div id="collab-form-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3>Add Collaborator</h3>
+        <button class="modal-close" data-modal="collab-form-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Username *</label>
+          <input type="text" id="collab-username" placeholder="GitHub username" />
+        </div>
+        <div class="form-group">
+          <label>Permission</label>
+          <select id="collab-permission">
+            <option value="pull">Pull (read only)</option>
+            <option value="triage">Triage (can manage PRs)</option>
+            <option value="push" selected>Push (read + write)</option>
+            <option value="maintain">Maintain (can manage settings)</option>
+            <option value="admin">Admin (full access)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-modal="collab-form-modal">Cancel</button>
+        <button class="btn btn-primary" id="save-collab-btn">Add</button>
+      </div>
+    </div>
+
+    <!-- Branch Protection Modal -->
+    <div id="protection-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3>Branch Protection: <span id="protection-repo-name"></span></h3>
+        <button class="modal-close" data-modal="protection-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Branch</label>
+          <select id="protection-branch"></select>
+        </div>
+        <div id="protection-rules"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" id="delete-protection-btn">Delete Rules</button>
+        <button class="btn btn-primary" id="save-protection-btn">Save Rules</button>
+      </div>
+    </div>
+
+    <!-- PR Detail Modal -->
+    <div id="pr-detail-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3>Pull Request Details</h3>
+        <button class="modal-close" data-modal="pr-detail-modal">✕</button>
+      </div>
+      <div class="modal-body" id="pr-detail-body" style="max-height: 60vh; overflow-y: auto;"></div>
+      <div class="modal-footer">
+        <a id="pr-detail-link" href="" target="_blank" class="btn btn-outline">Open on GitHub</a>
+        <button class="btn btn-primary" data-modal="pr-detail-modal">Close</button>
+      </div>
+    </div>
+
+    <!-- Create PR Modal -->
+    <div id="create-pr-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3>Create Pull Request</h3>
+        <button class="modal-close" data-modal="create-pr-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Title *</label>
+          <input type="text" id="create-pr-title" placeholder="Pull request title..."/>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="create-pr-body" placeholder="Describe your changes..." rows="5"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Base Branch *</label>
+          <select id="create-pr-base"></select>
+        </div>
+        <div class="form-group">
+          <label>Head Branch *</label>
+          <select id="create-pr-head"></select>
+        </div>
+        <div class="create-pr-section">
+          <div class="create-pr-section-title">Options</div>
+          <div class="create-pr-options">
+            <label class="create-pr-option" id="draft-option">
+              <input type="checkbox" id="create-pr-draft"/>
+              <span class="create-pr-option-icon">📝</span>
+              <div class="create-pr-option-text">
+                <div class="create-pr-option-title">Draft PR</div>
+                <div class="create-pr-option-desc">Create as draft for work in progress</div>
+              </div>
+            </label>
+            <label class="create-pr-option" id="automerge-option">
+              <input type="checkbox" id="create-pr-auto-merge"/>
+              <span class="create-pr-option-icon">🤖</span>
+              <div class="create-pr-option-text">
+                <div class="create-pr-option-title">Auto-merge</div>
+                <div class="create-pr-option-desc">Enable auto-merge when requirements are met</div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-modal="create-pr-modal">Cancel</button>
+        <button class="btn btn-primary" id="create-pr-btn">Create Pull Request</button>
+      </div>
+    </div>
+
+    <!-- Issue Detail Modal -->
+    <div id="issue-detail-modal" class="modal-overlay hidden">
+      <div class="modal" style="max-width: 800px; max-height: 90vh;">
+        <div class="modal-header">
+          <h3 id="issue-detail-title">Issue Details</h3>
+          <button class="modal-close" data-close="issue-detail-modal">✕</button>
+        </div>
+        <div class="modal-body" id="issue-detail-body" style="max-height: 60vh; overflow-y: auto;"></div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-close="issue-detail-modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast-container"></div>
+
+  <script>
+/* =====================================================
+   GitHub Manager — app.js
+   Single-page app, all API calls to api.github.com
+   ===================================================== */
+
+const API = 'https://api.github.com';
+
+// ── State ──────────────────────────────────────────────
+let state = {
+  pat: null,
+  user: null,
+  repos: [],
+  currentSection: 'repos',
+  issueFilter: 'open',
+  pullFilter: 'open',
+  confirmCallback: null,
+  repoSort: 'updated',
+  repoLangFilter: '',
+  repoVisFilter: '',
+  repoSearchQuery: '',
+  repoHasIssues: false,
+  repoShowArchived: false,
+  batchMode: false,
+  selectedRepos: new Set(),
+  theme: 'dark',
+  dashboardTab: 'overview',
+  dashboardRefreshKey: 0,
+  healthData: null,
+  contributorsData: null,
+  trendsData: null,
+  alertsData: null,
+  issuesBatchMode: false,
+  selectedIssues: new Set(),
+  currentIssueRepo: null,
+  currentPR: null,
+  reviewsData: null
+};
+
+// ── Helpers ─────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const q = sel => document.querySelector(sel);
+const qa = sel => document.querySelectorAll(sel);
+
+function gh(endpoint, opts = {}) {
+  return fetch(API + endpoint, {
+    ...opts,
+    headers: {
+      'Authorization': `token ${state.pat}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json',
+      ...(opts.headers || {})
+    }
+  });
+}
+
+function toast(msg, type = 'info') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  $('toast-container').appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+
+function showModal(id) {
+  $('modal-overlay').classList.remove('hidden');
+  $('modal-overlay').classList.add('active');
+  $(id).classList.remove('hidden');
+}
+
+function hideModal(id) {
+  $(id).classList.add('hidden');
+  // hide overlay if no other modals open
+  const open = document.querySelectorAll('.modal:not(.hidden)');
+  if (open.length === 0) {
+    $('modal-overlay').classList.add('hidden');
+    $('modal-overlay').classList.remove('active');
+  }
+}
+
+function hideAllModals() {
+  qa('.modal').forEach(m => m.classList.add('hidden'));
+  $('modal-overlay').classList.add('hidden');
+  $('modal-overlay').classList.remove('active');
+}
+
+function loadingHTML() {
+  return `<div class="loading-overlay"><div class="spinner"></div><span>Loading…</span></div>`;
+}
+
+function emptyHTML(msg) {
+  return `<div class="empty-state"><p>${msg}</p></div>`;
+}
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function langColor(lang) {
+  const colors = {
+    JavaScript:'#f1e05a', TypeScript:'#2b7489', Python:'#3572A5', Java:'#b07219',
+    'C++':'#f34b7d', C:'#555555', 'C#':'#178600', PHP:'#4F5D95', Ruby:'#701516',
+    Go:'#00ADD8', Rust:'#dea584', Swift:'#ffac45', Kotlin:'#F18E33', Dart:'#00B4AB',
+    HTML:'#e34c26', CSS:'#563d7c', Shell:'#89e051', Scala:'#c22d40', R:'#198CE7',
+    Lua:'#000080', Elixir:'#6e4a7e', Haskell:'#5e5086', Vue:'#2c3e50',
+  };
+  return colors[lang] || '#8b949e';
+}
+
+// ── Auth ─────────────────────────────────────────────────
+function savePat(pat) {
+  sessionStorage.setItem('gh_pat', pat);
+  state.pat = pat;
+}
+
+function loadPat() {
+  return sessionStorage.getItem('gh_pat');
+}
+
+function clearPat() {
+  sessionStorage.removeItem('gh_pat');
+  state.pat = null;
+  state.user = null;
+  state.repos = [];
+}
+
+async function login(pat) {
+  state.pat = pat;
+  const res = await gh('/user');
+  if (!res.ok) {
+    state.pat = null;
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
+  const user = await res.json();
+  savePat(pat);
+  state.user = user;
+  return user;
+}
+
+function logout() {
+  clearPat();
+  showLoginScreen();
+}
+
+// ── Screens ──────────────────────────────────────────────
+function showLoginScreen() {
+  $('login-screen').classList.remove('hidden');
+  $('login-screen').classList.add('active');
+  $('app-screen').classList.remove('active');
+  $('app-screen').classList.add('hidden');
+  $('pat-input').value = '';
+  $('login-error').classList.add('hidden');
+}
+
+function showAppScreen() {
+  $('login-screen').classList.remove('active');
+  $('login-screen').classList.add('hidden');
+  $('app-screen').classList.remove('hidden');
+  $('app-screen').classList.add('active');
+  renderUserSidebar();
+  navigateTo('dashboard');
+}
+
+function renderUserSidebar() {
+  const u = state.user;
+  if (!u) return;
+  $('user-avatar').src = u.avatar_url;
+  $('user-name').textContent = u.name || u.login;
+  $('user-login').textContent = '@' + u.login;
+}
+
+// ── Navigation ───────────────────────────────────────────
+function navigateTo(section) {
+  state.currentSection = section;
+
+  qa('.content-section').forEach(s => { s.classList.remove('active'); s.classList.add('hidden'); });
+  const el = $(`${section}-section`);
+  if (el) { el.classList.remove('hidden'); el.classList.add('active'); }
+
+  qa('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.section === section);
+  });
+
+  closeSidebar();
+
+  switch (section) {
+    case 'dashboard': 
+      loadDashboard(); 
+      if (!state.healthData) loadHealthData();
+      if (!state.contributorsData) loadContributorsData();
+      if (!state.trendsData) loadTrendsData();
+      if (!state.alertsData) loadAlertsData();
+      break;
+    case 'repos': loadRepos(); break;
+    case 'issues': loadIssueRepoSelect(); break;
+    case 'pulls': loadPullRepoSelect(); break;
+    case 'gists': loadGists(); break;
+    case 'profile': loadProfile(); break;
+  }
+}
+
+// ── Sidebar mobile ────────────────────────────────────────
+function openSidebar() {
+  $('sidebar').classList.add('open');
+  $('sidebar-backdrop').classList.add('active');
+}
+function closeSidebar() {
+  $('sidebar').classList.remove('open');
+  $('sidebar-backdrop').classList.remove('active');
+}
+
+// ── Dashboard Tab Navigation ──────────────────────────────
+function switchDashboardTab(tabName) {
+  state.dashboardTab = tabName;
+  
+  qa('.dashboard-tabs .tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabName);
+  });
+  
+  qa('.tab-content').forEach(content => {
+    content.classList.toggle('active', content.dataset.content === tabName);
+  });
+  
+  switch(tabName) {
+    case 'overview': break;
+    case 'health': if (!state.healthData) loadHealthData(); break;
+    case 'contributors': if (!state.contributorsData) loadContributorsData(); break;
+    case 'trends': if (!state.trendsData) loadTrendsData(); break;
+    case 'alerts': if (!state.alertsData) loadAlertsData(); break;
+  }
+}
+
+// ── Feature 3: Activity Dashboard ────────────────────────
+async function loadDashboard() {
+  const container = $('dashboard-content');
+  container.innerHTML = loadingHTML();
+  try {
+    const [userRes, reposRes, eventsRes] = await Promise.all([
+      gh('/user'),
+      gh('/user/repos?per_page=100&sort=updated&affiliation=owner,collaborator,organization_member'),
+      gh(`/users/${state.user.login}/events?per_page=30`)
+    ]);
+
+    const user = userRes.ok ? await userRes.json() : state.user;
+    const repos = reposRes.ok ? await reposRes.json() : [];
+    const events = eventsRes.ok ? await eventsRes.json() : [];
+
+    if (repos.length) { state.repos = repos; populateRepoSelects(); }
+
+    const totalStars = repos.reduce((s, r) => s + r.stargazers_count, 0);
+    const totalForks = repos.reduce((s, r) => s + r.forks_count, 0);
+    const languages = {};
+    repos.forEach(r => { if (r.language) languages[r.language] = (languages[r.language] || 0) + 1; });
+    const topLangs = Object.entries(languages).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const openIssues = repos.reduce((s, r) => s + r.open_issues_count, 0);
+
+    container.innerHTML = `
+      <div class="dashboard-grid">
+        <div class="dashboard-stat-card"><div class="dash-stat-icon">📦</div><div class="dash-stat-value">${repos.length}</div><div class="dash-stat-label">Repositories</div></div>
+        <div class="dashboard-stat-card"><div class="dash-stat-icon">⭐</div><div class="dash-stat-value">${totalStars}</div><div class="dash-stat-label">Total Stars</div></div>
+        <div class="dashboard-stat-card"><div class="dash-stat-icon">🍴</div><div class="dash-stat-value">${totalForks}</div><div class="dash-stat-label">Total Forks</div></div>
+        <div class="dashboard-stat-card"><div class="dash-stat-icon">🐛</div><div class="dash-stat-value">${openIssues}</div><div class="dash-stat-label">Open Issues</div></div>
+        <div class="dashboard-stat-card"><div class="dash-stat-icon">👥</div><div class="dash-stat-value">${user.followers}</div><div class="dash-stat-label">Followers</div></div>
+        <div class="dashboard-stat-card"><div class="dash-stat-icon">🔥</div><div class="dash-stat-value">${user.public_gists}</div><div class="dash-stat-label">Public Gists</div></div>
+      </div>
+      <div class="dashboard-panels">
+        <div class="dashboard-panel">
+          <h3 class="panel-title">🔤 Top Languages</h3>
+          <div class="lang-bars">
+            ${topLangs.length ? topLangs.map(([lang, count]) => `
+              <div class="lang-bar-row">
+                <span class="lang-dot" style="background:${langColor(lang)}"></span>
+                <span class="lang-bar-name">${escHtml(lang)}</span>
+                <div class="lang-bar-track"><div class="lang-bar-fill" style="width:${Math.round(count / repos.length * 100)}%;background:${langColor(lang)}"></div></div>
+                <span class="lang-bar-count">${count}</span>
+              </div>`).join('') : '<p style="color:var(--text-muted);font-size:13px">No language data.</p>'}
+          </div>
+        </div>
+        <div class="dashboard-panel">
+          <h3 class="panel-title">🕐 Recent Activity</h3>
+          <div class="activity-list">
+            ${events.length ? events.slice(0, 10).map(ev => {
+              const icon = eventIcon(ev.type);
+              const desc = eventDesc(ev);
+              return `<div class="activity-item"><span class="activity-icon">${icon}</span><div class="activity-body"><div class="activity-desc">${desc}</div><div class="activity-time">${formatDate(ev.created_at)}</div></div></div>`;
+            }).join('') : '<p style="color:var(--text-muted);font-size:13px">No recent events.</p>'}
+          </div>
+        </div>
+        <div class="dashboard-panel">
+          <h3 class="panel-title">⭐ Most Starred Repos</h3>
+          <div class="top-repos-list">
+            ${repos.sort((a, b) => b.stargazers_count - a.stargazers_count).slice(0, 5).map(r => `
+              <div class="top-repo-item">
+                <div class="top-repo-info"><span class="top-repo-name" onclick="navigateTo('repos')">${escHtml(r.name)}</span>${r.language ? `<span class="lang-dot" style="background:${langColor(r.language)};margin-left:6px"></span><span style="font-size:11px;color:var(--text-muted)">${escHtml(r.language)}</span>` : ''}</div>
+                <span class="top-repo-stars">⭐ ${r.stargazers_count}</span>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>`;
+  } catch (e) { container.innerHTML = `<div class="error-msg">${e.message}</div>`; }
+}
+
+function eventIcon(type) {
+  const icons = { PushEvent: '⬆️', CreateEvent: '✨', DeleteEvent: '🗑️', WatchEvent: '⭐', ForkEvent: '🍴', IssuesEvent: '🐛', PullRequestEvent: '🔀', ReleaseEvent: '🚀', IssueCommentEvent: '💬', PullRequestReviewEvent: '👀', CommitCommentEvent: '📝', GollumEvent: '📖', MemberEvent: '👥', PublicEvent: '🌍' };
+  return icons[type] || '🔔';
+}
+
+function eventDesc(ev) {
+  const repo = `<strong>${escHtml(ev.repo?.name || '')}</strong>`;
+  switch (ev.type) {
+    case 'PushEvent': return `Pushed ${ev.payload?.commits?.length || 0} commit(s) to ${repo}`;
+    case 'CreateEvent': return `Created ${escHtml(ev.payload?.ref_type || '')} in ${repo}`;
+    case 'DeleteEvent': return `Deleted ${escHtml(ev.payload?.ref_type || '')} in ${repo}`;
+    case 'WatchEvent': return `Starred ${repo}`;
+    case 'ForkEvent': return `Forked ${repo}`;
+    case 'IssuesEvent': return `${escHtml(ev.payload?.action || '')} issue in ${repo}`;
+    case 'PullRequestEvent': return `${escHtml(ev.payload?.action || '')} pull request in ${repo}`;
+    case 'ReleaseEvent': return `Published release in ${repo}`;
+    case 'IssueCommentEvent': return `Commented on issue in ${repo}`;
+    default: return `${escHtml(ev.type?.replace('Event','') || '')} in ${repo}`;
+  }
+}
+
+// ── Repositories ─────────────────────────────────────────
+async function loadRepos() {
+  const container = $('repos-list');
+  container.innerHTML = loadingHTML();
+  try {
+    let page = 1, all = [];
+    while (true) {
+      const res = await gh(`/user/repos?per_page=100&page=${page}&sort=updated&affiliation=owner,collaborator,organization_member`);
+      if (!res.ok) throw new Error(`Failed to fetch repos (${res.status})`);
+      const data = await res.json();
+      all = all.concat(data);
+      if (data.length < 100) break;
+      page++;
+    }
+    state.repos = all;
+    populateRepoSelects();
+    renderRepos(all);
+  } catch (e) {
+    container.innerHTML = `<div class="error-msg">${e.message}</div>`;
+  }
+}
+
+function renderRepos(repos) {
+  const container = $('repos-list');
+  const query = ($('repo-search').value || '').toLowerCase();
+  const filtered = repos.filter(r =>
+    r.name.toLowerCase().includes(query) ||
+    (r.description || '').toLowerCase().includes(query)
+  );
+
+  if (!filtered.length) {
+    container.innerHTML = emptyHTML('No repositories found.');
+    return;
+  }
+
+  container.innerHTML = filtered.map(repo => `
+    <div class="repo-card" data-repo="${repo.full_name}">
+      <div class="repo-card-header">
+        <label class="batch-checkbox">
+          <input type="checkbox" class="batch-select-item" value="${escHtml(repo.full_name)}" />
+        </label>
+        <span class="repo-card-name" onclick="showRepoDetail('${escHtml(repo.full_name)}')">${escHtml(repo.name)}</span>
+        <span class="badge badge-${repo.private ? 'private' : 'public'}">${repo.private ? 'Private' : 'Public'}</span>
+        <div class="repo-actions">
+          <button class="btn btn-icon btn-secondary repo-menu-btn" data-repo="${escHtml(repo.full_name)}">⋮</button>
+        </div>
+      </div>
+      <div class="repo-card-desc">${escHtml(repo.description || 'No description provided.')}</div>
+      <div class="repo-card-meta">
+        ${repo.language ? `<span class="repo-meta-item"><span class="lang-dot" style="background:${langColor(repo.language)}"></span>${escHtml(repo.language)}</span>` : ''}
+        <span class="repo-meta-item">⭐ ${repo.stargazers_count}</span>
+        <span class="repo-meta-item">🍴 ${repo.forks_count}</span>
+        <span class="repo-meta-item">Updated ${formatDate(repo.updated_at)}</span>
+      </div>
+      <div class="repo-card-actions">
+        <a href="${escHtml(repo.html_url)}" target="_blank" class="btn btn-outline btn-sm">Open on GitHub</a>
+        <button class="btn btn-outline btn-sm" onclick="showRepoDetail('${escHtml(repo.full_name)}')">Details</button>
+        <button class="btn btn-danger btn-sm" onclick="confirmDeleteRepo('${escHtml(repo.full_name)}')">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Batch Operations ─────────────────────────────────────
+function toggleBatchMode() {
+  state.batchMode = !state.batchMode;
+  qa('.batch-checkbox').forEach(el => el.style.display = state.batchMode ? 'flex' : 'none');
+  $('batch-action-bar').classList.toggle('hidden', !state.batchMode);
+  if (!state.batchMode) clearBatchSelection();
+}
+
+function updateBatchCount() {
+  const count = state.selectedRepos.size;
+  $('batch-count').textContent = `${count} selected`;
+  $('batch-action-bar').classList.toggle('hidden', count === 0);
+}
+
+function clearBatchSelection() {
+  state.selectedRepos.clear();
+  qa('.batch-select-item').forEach(cb => cb.checked = false);
+  const selectAll = $('batch-select-all');
+  if (selectAll) selectAll.checked = false;
+  updateBatchCount();
+}
+
+async function batchArchive() {
+  const repos = Array.from(state.selectedRepos);
+  if (repos.length === 0) return;
+  
+  const confirmed = await showConfirmDialog(`Archive ${repos.length} repository(ies)?`, 'Archived repos will be read-only.');
+  if (!confirmed) return;
+  
+  let success = 0, failed = 0;
+  for (const fullName of repos) {
+    try {
+      const res = await gh(`/repos/${fullName}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ archived: true })
+      });
+      if (res.ok) success++;
+      else failed++;
+    } catch { failed++; }
+  }
+  
+  toast(`Archived ${success} repo(s)${failed ? `, ${failed} failed` : ''}`, success > 0 ? 'success' : 'error');
+  clearBatchSelection();
+  loadRepos();
+}
+
+async function batchDelete() {
+  const repos = Array.from(state.selectedRepos);
+  if (repos.length === 0) return;
+  
+  const typed = await showPromptDialog(`Delete ${repos.length} repository(ies)?`, `Type "confirm" to confirm:`, 'confirm');
+  if (!typed || typed !== 'confirm') {
+    toast('Deletion cancelled', 'info');
+    return;
+  }
+  
+  let success = 0, failed = 0;
+  for (const fullName of repos) {
+    try {
+      const res = await gh(`/repos/${fullName}`, { method: 'DELETE' });
+      if (res.ok) success++;
+      else failed++;
+    } catch { failed++; }
+  }
+  
+  toast(`Deleted ${success} repo(s)${failed ? `, ${failed} failed` : ''}`, success > 0 ? 'success' : 'error');
+  clearBatchSelection();
+  loadRepos();
+}
+
+// ── Filter Functions ──────────────────────────────────────
+function filterAndSortRepos(repos) {
+  let filtered = [...repos];
+  
+  if (state.repoSearchQuery) {
+    const q = state.repoSearchQuery.toLowerCase();
+    filtered = filtered.filter(r => 
+      r.name.toLowerCase().includes(q) || 
+      (r.description || '').toLowerCase().includes(q)
+    );
+  }
+  
+  if (state.repoLangFilter) {
+    filtered = filtered.filter(r => r.language === state.repoLangFilter);
+  }
+  
+  if (state.repoVisFilter === 'public') {
+    filtered = filtered.filter(r => !r.private);
+  } else if (state.repoVisFilter === 'private') {
+    filtered = filtered.filter(r => r.private);
+  }
+  
+  if (!state.repoShowArchived) {
+    filtered = filtered.filter(r => !r.archived);
+  }
+  
+  filtered.sort((a, b) => {
+    switch(state.repoSort) {
+      case 'stars': return b.stargazers_count - a.stargazers_count;
+      case 'forks': return b.forks_count - a.forks_count;
+      case 'name': return a.name.localeCompare(b.name);
+      default: return new Date(b.updated_at) - new Date(a.updated_at);
+    }
+  });
+  
+  return filtered;
+}
+
+function renderRepoList() {
+  const filtered = filterAndSortRepos(state.repos);
+  renderRepos(filtered);
+  updateLanguageFilter();
+}
+
+function updateLanguageFilter() {
+  const langs = [...new Set(state.repos.map(r => r.language).filter(Boolean))].sort();
+  const select = $('repo-lang-filter');
+  const current = select.value;
+  select.innerHTML = '<option value="">All Languages</option>' + langs.map(l => `<option value="${escHtml(l)}">${escHtml(l)}</option>`).join('');
+  select.value = current;
+}
+
+// ── Export Functions ─────────────────────────────────────
+function showExportModal() {
+  const count = state.selectedRepos.size > 0 ? state.selectedRepos.size : state.repos.length;
+  $('export-count').textContent = count;
+  $('export-selected').checked = false;
+  showModal('export-modal');
+}
+
+function exportRepos() {
+  const format = $('export-format').value;
+  const selectedOnly = $('export-selected').checked;
+  
+  let repos = selectedOnly 
+    ? state.repos.filter(r => state.selectedRepos.has(r.full_name))
+    : state.repos;
+  
+  let content, mimeType, ext;
+  
+  if (format === 'json') {
+    content = JSON.stringify(repos.map(r => ({
+      name: r.name,
+      full_name: r.full_name,
+      description: r.description,
+      language: r.language,
+      private: r.private,
+      fork: r.fork,
+      stargazers_count: r.stargazers_count,
+      forks_count: r.forks_count,
+      open_issues_count: r.open_issues_count,
+      updated_at: r.updated_at,
+      created_at: r.created_at,
+      homepage: r.homepage,
+      html_url: r.html_url
+    })), null, 2);
+    mimeType = 'application/json';
+    ext = 'json';
+  } else {
+    const headers = ['name', 'full_name', 'description', 'language', 'private', 'stargazers', 'forks', 'issues', 'updated', 'created', 'url'];
+    const rows = repos.map(r => [
+      r.name, r.full_name, `"${(r.description || '').replace(/"/g, '""')}"`,
+      r.language || '', r.private, r.stargazers_count, r.forks_count,
+      r.open_issues_count, r.updated_at, r.created_at, r.html_url
+    ]);
+    content = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    mimeType = 'text/csv';
+    ext = 'csv';
+  }
+  
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `repos-export.${ext}`;
+  a.click();
+  URL.revokeObjectURL(url);
+  
+  hideModal('export-modal');
+  toast(`Exported ${repos.length} repositories`, 'success');
+}
+
+// ── Three-Dot Menu ───────────────────────────────────────
+let activeDropdown = null;
+
+function toggleRepoMenu(btn) {
+  const menu = $('repo-dropdown');
+  const repoFullName = btn.dataset.repo;
+  
+  const rect = btn.getBoundingClientRect();
+  menu.style.top = `${rect.bottom + 4}px`;
+  menu.style.right = '0px';
+  
+  if (activeDropdown === menu) {
+    menu.classList.add('hidden');
+    activeDropdown = null;
+  } else {
+    qa('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+    menu.classList.remove('hidden');
+    menu.dataset.repo = repoFullName;
+    activeDropdown = menu;
+  }
+}
+
+function handleDropdownAction(e) {
+  const item = e.target.closest('.dropdown-item');
+  if (!item) return;
+  
+  const action = item.dataset.action;
+  const repoFullName = $('repo-dropdown').dataset.repo;
+  
+  qa('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+  activeDropdown = null;
+  
+  switch(action) {
+    case 'view': showRepoDetail(repoFullName); break;
+    case 'webhooks': showWebhooksModal(repoFullName); break;
+    case 'collaborators': showCollaboratorsModal(repoFullName); break;
+    case 'protection': showBranchProtectionModal(repoFullName); break;
+    case 'delete': confirmDeleteRepo(repoFullName); break;
+  }
+}
+
+// ── Webhook Functions ────────────────────────────────────
+async function showWebhooksModal(repoFullName) {
+  $('webhooks-repo-name').textContent = repoFullName;
+  $('webhooks-list').innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
+  showModal('webhooks-modal');
+  await loadWebhooks(repoFullName);
+}
+
+async function loadWebhooks(repoFullName) {
+  try {
+    const res = await gh(`/repos/${repoFullName}/hooks`);
+    if (!res.ok) throw new Error('Failed to load webhooks');
+    
+    const hooks = await res.json();
+    
+    if (hooks.length === 0) {
+      $('webhooks-list').innerHTML = '<div class="empty-state"><p>No webhooks configured.</p></div>';
+      return;
+    }
+    
+    $('webhooks-list').innerHTML = hooks.map(hook => `
+      <div class="webhook-item">
+        <div class="webhook-url">${escHtml(hook.url || hook.test_url || '')}</div>
+        <div class="webhook-events">
+          ${hook.events.map(e => `<span class="badge">${escHtml(e)}</span>`).join(' ')}
+        </div>
+        <div class="webhook-actions">
+          <button class="btn btn-sm btn-secondary" onclick="testWebhook('${escHtml(repoFullName)}', ${hook.id})">Test</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteWebhook('${escHtml(repoFullName)}', ${hook.id})">✕</button>
+        </div>
+      </div>
+    `).join('');
+    
+  } catch (e) {
+    $('webhooks-list').innerHTML = `<div class="error-msg">${e.message}</div>`;
+  }
+}
+
+async function testWebhook(repoFullName, hookId) {
+  try {
+    const res = await gh(`/repos/${repoFullName}/hooks/${hookId}/tests`, { method: 'POST' });
+    if (res.ok) toast('Webhook test sent!', 'success');
+    else toast('Failed to test webhook', 'error');
+  } catch (e) {
+    toast('Error testing webhook', 'error');
+  }
+}
+
+async function deleteWebhook(repoFullName, hookId) {
+  const confirmed = await showConfirmDialog('Delete this webhook?', 'This action cannot be undone.');
+  if (!confirmed) return;
+  
+  try {
+    const res = await gh(`/repos/${repoFullName}/hooks/${hookId}`, { method: 'DELETE' });
+    if (res.ok) {
+      toast('Webhook deleted', 'success');
+      loadWebhooks(repoFullName);
+    } else {
+      toast('Failed to delete webhook', 'error');
+    }
+  } catch (e) {
+    toast('Error deleting webhook', 'error');
+  }
+}
+
+function showAddWebhookForm() {
+  $('webhook-form-title').textContent = 'Add Webhook';
+  $('webhook-url').value = '';
+  $('webhook-secret').value = '';
+  qa('#webhook-form-modal input[type="checkbox"]').forEach(cb => {
+    cb.checked = cb.value === 'push';
+  });
+  showModal('webhook-form-modal');
+}
+
+async function saveWebhook() {
+  const url = $('webhook-url').value.trim();
+  if (!url) { toast('Payload URL is required', 'error'); return; }
+  
+  const repo = $('webhooks-repo-name').textContent;
+  const events = Array.from(qa('#webhook-form-modal input[type="checkbox"]:checked')).map(cb => cb.value);
+  
+  const hook = {
+    config: {
+      url: url,
+      content_type: $('webhook-content-type').value,
+      secret: $('webhook-secret').value || undefined
+    },
+    events: events,
+    active: true
+  };
+  
+  try {
+    const res = await gh(`/repos/${repo}/hooks`, {
+      method: 'POST',
+      body: JSON.stringify(hook)
+    });
+    
+    if (res.ok) {
+      toast('Webhook created', 'success');
+      hideModal('webhook-form-modal');
+      loadWebhooks(repo);
+    } else {
+      const err = await res.json().catch(() => ({}));
+      toast(err.message || 'Failed to create webhook', 'error');
+    }
+  } catch (e) {
+    toast('Error creating webhook', 'error');
+  }
+}
+
+// ── Collaborator Functions ────────────────────────────────
+async function showCollaboratorsModal(repoFullName) {
+  $('collaborators-repo-name').textContent = repoFullName;
+  $('collaborators-list').innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
+  showModal('collaborators-modal');
+  await loadCollaborators(repoFullName);
+}
+
+async function loadCollaborators(repoFullName) {
+  try {
+    const res = await gh(`/repos/${repoFullName}/collaborators`);
+    if (!res.ok) throw new Error('Failed to load collaborators');
+    
+    const collabs = await res.json();
+    
+    if (collabs.length === 0) {
+      $('collaborators-list').innerHTML = '<div class="empty-state"><p>No collaborators.</p></div>';
+      return;
+    }
+    
+    $('collaborators-list').innerHTML = collabs.map(c => `
+      <div class="collab-item">
+        <img src="${escHtml(c.avatar_url)}" class="collab-avatar" />
+        <span class="collab-name">${escHtml(c.login)}</span>
+        <button class="btn btn-sm btn-danger" onclick="removeCollaborator('${escHtml(repoFullName)}', '${escHtml(c.login)}')">✕</button>
+      </div>
+    `).join('');
+    
+  } catch (e) {
+    $('collaborators-list').innerHTML = `<div class="error-msg">${e.message}</div>`;
+  }
+}
+
+async function removeCollaborator(repoFullName, username) {
+  const confirmed = await showConfirmDialog(`Remove ${username}?`, 'They will lose access to this repository.');
+  if (!confirmed) return;
+  
+  try {
+    const res = await gh(`/repos/${repoFullName}/collaborators/${username}`, { method: 'DELETE' });
+    if (res.ok) {
+      toast(`${username} removed`, 'success');
+      loadCollaborators(repoFullName);
+    } else {
+      toast('Failed to remove collaborator', 'error');
+    }
+  } catch (e) {
+    toast('Error removing collaborator', 'error');
+  }
+}
+
+async function addCollaborator() {
+  const username = $('collab-username').value.trim();
+  const permission = $('collab-permission').value;
+  
+  if (!username) {
+    toast('Please enter a username', 'error');
+    return;
+  }
+  
+  const repo = $('collaborators-repo-name').textContent;
+  
+  try {
+    const res = await gh(`/repos/${repo}/collaborators/${username}`, {
+      method: 'PUT',
+      body: JSON.stringify({ permission })
+    });
+    
+    if (res.ok || res.status === 204) {
+      toast(`${username} added as ${permission}`, 'success');
+      hideModal('collab-form-modal');
+      $('collab-username').value = '';
+      loadCollaborators(repo);
+    } else {
+      toast('Failed to add collaborator', 'error');
+    }
+  } catch (e) {
+    toast('Error adding collaborator', 'error');
+  }
+}
+
+// ── Branch Protection Functions ───────────────────────────
+async function showBranchProtectionModal(repoFullName) {
+  $('protection-repo-name').textContent = repoFullName;
+  showModal('protection-modal');
+  await loadBranchesAndProtection(repoFullName);
+}
+
+async function loadBranchesAndProtection(repoFullName) {
+  try {
+    const branchesRes = await gh(`/repos/${repoFullName}/branches`);
+    const branches = await branchesRes.json();
+    
+    $('protection-branch').innerHTML = branches.map(b => 
+      `<option value="${escHtml(b.name)}">${escHtml(b.name)}</option>`
+    ).join('');
+    
+    const branch = branches[0]?.name;
+    if (branch) {
+      await loadProtectionRules(repoFullName, branch);
+    }
+  } catch (e) {
+    toast('Error loading branches', 'error');
+  }
+}
+
+async function loadProtectionRules(repoFullName, branch) {
+  try {
+    const res = await gh(`/repos/${repoFullName}/branches/${branch}/protection`);
+    
+    let rules = {};
+    if (res.ok) {
+      rules = await res.json();
+    }
+    
+    renderProtectionForm(rules);
+  } catch (e) {
+    renderProtectionForm({});
+  }
+}
+
+function renderProtectionForm(rules) {
+  $('protection-rules').innerHTML = `
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="prot-required-reviews" ${rules.required_status_checks ? 'checked' : ''} />
+        <span>Require pull request reviews before merging</span>
+      </label>
+    </div>
+    <div class="form-group" style="padding-left: 20px;">
+      <label>Required approving reviewers: ${rules.required_pull_request_reviews?.required_approving_review_count || 0}</label>
+      <input type="range" id="prot-review-count" min="0" max="6" 
+        value="${rules.required_pull_request_reviews?.required_approving_review_count || 0}" />
+    </div>
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="prot-status-checks" ${rules.required_status_checks ? 'checked' : ''} />
+        <span>Require status checks to pass before merging</span>
+      </label>
+    </div>
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="prot-linear-history" ${rules.required_linear_history ? 'checked' : ''} />
+        <span>Require linear history</span>
+      </label>
+    </div>
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="prot-include-admins" ${rules.enforce_admins ? 'checked' : ''} />
+        <span>Include administrators</span>
+      </label>
+    </div>
+  `;
+}
+
+async function saveProtectionRules() {
+  const repo = $('protection-repo-name').textContent;
+  const branch = $('protection-branch').value;
+  
+  const rules = {
+    required_status_checks: $('prot-status-checks').checked ? { strict: true, contexts: [] } : null,
+    enforce_admins: $('prot-include-admins').checked,
+    required_linear_history: $('prot-linear-history').checked,
+    required_pull_request_reviews: $('prot-required-reviews').checked ? {
+      required_approving_review_count: parseInt($('prot-review-count').value)
+    } : null
+  };
+  
+  try {
+    const res = await gh(`/repos/${repo}/branches/${branch}/protection`, {
+      method: 'PUT',
+      body: JSON.stringify(rules)
+    });
+    
+    if (res.ok) {
+      toast('Protection rules saved', 'success');
+      hideModal('protection-modal');
+    } else {
+      toast('Failed to save rules', 'error');
+    }
+  } catch (e) {
+    toast('Error saving rules', 'error');
+  }
+}
+
+async function deleteProtectionRules() {
+  const repo = $('protection-repo-name').textContent;
+  const branch = $('protection-branch').value;
+  
+  const confirmed = await showConfirmDialog('Delete protection rules?', 'This branch will become unprotected.');
+  if (!confirmed) return;
+  
+  try {
+    const res = await gh(`/repos/${repo}/branches/${branch}/protection`, { method: 'DELETE' });
+    if (res.ok) {
+      toast('Protection rules deleted', 'success');
+      hideModal('protection-modal');
+    } else {
+      toast('Failed to delete rules', 'error');
+    }
+  } catch (e) {
+    toast('Error deleting rules', 'error');
+  }
+}
+
+// ── Helper Dialogs ───────────────────────────────────────
+function showConfirmDialog(title, message) {
+  return new Promise((resolve) => {
+    $('confirm-title').textContent = title;
+    $('confirm-message').innerHTML = message;
+    $('confirm-input-group').style.display = 'none';
+    showModal('confirm-modal');
+    state.confirmCallback = () => {
+      hideModal('confirm-modal');
+      resolve(true);
+    };
+    const cancelHandler = () => {
+      hideModal('confirm-modal');
+      $('confirm-action-btn').removeEventListener('click', state.confirmCallback);
+      resolve(false);
+    };
+    $('confirm-action-btn').onclick = () => {
+      hideModal('confirm-modal');
+      resolve(true);
+    };
+    qa('[data-modal="confirm-modal"]').forEach(btn => {
+      btn.onclick = () => {
+        hideModal('confirm-modal');
+        resolve(false);
+      };
+    });
+  });
+}
+
+function showPromptDialog(title, message, placeholder) {
+  return new Promise((resolve) => {
+    $('confirm-title').textContent = title;
+    $('confirm-message').innerHTML = message;
+    $('confirm-input-group').style.display = 'block';
+    $('confirm-input-label').textContent = 'Confirmation';
+    $('confirm-input').value = '';
+    $('confirm-input').placeholder = placeholder;
+    showModal('confirm-modal');
+    state.confirmCallback = () => {
+      resolve($('confirm-input').value);
+    };
+  });
+}
+
+async function showRepoDetail(fullName) {
+  showModal('repo-detail-modal');
+  $('repo-detail-title').textContent = fullName;
+  $('repo-detail-body').innerHTML = loadingHTML();
+  try {
+    const res = await gh(`/repos/${fullName}`);
+    if (!res.ok) throw new Error(`Failed: ${res.status}`);
+    const r = await res.json();
+    $('repo-detail-body').innerHTML = `
+      <div>
+        <p style="color:var(--text-secondary);margin-bottom:16px">${escHtml(r.description || 'No description.')}</p>
+        <div class="repo-detail-grid">
+          <div class="repo-detail-item"><div class="repo-detail-label">Stars</div><div class="repo-detail-value">⭐ ${r.stargazers_count}</div></div>
+          <div class="repo-detail-item"><div class="repo-detail-label">Forks</div><div class="repo-detail-value">🍴 ${r.forks_count}</div></div>
+          <div class="repo-detail-item"><div class="repo-detail-label">Watchers</div><div class="repo-detail-value">👁 ${r.watchers_count}</div></div>
+          <div class="repo-detail-item"><div class="repo-detail-label">Open Issues</div><div class="repo-detail-value">${r.open_issues_count}</div></div>
+          <div class="repo-detail-item"><div class="repo-detail-label">Language</div><div class="repo-detail-value">${escHtml(r.language || 'N/A')}</div></div>
+          <div class="repo-detail-item"><div class="repo-detail-label">Visibility</div><div class="repo-detail-value">${r.private ? '🔒 Private' : '🌍 Public'}</div></div>
+          <div class="repo-detail-item"><div class="repo-detail-label">Created</div><div class="repo-detail-value">${formatDate(r.created_at)}</div></div>
+          <div class="repo-detail-item"><div class="repo-detail-label">Updated</div><div class="repo-detail-value">${formatDate(r.updated_at)}</div></div>
+          <div class="repo-detail-item"><div class="repo-detail-label">Default Branch</div><div class="repo-detail-value">${escHtml(r.default_branch)}</div></div>
+          <div class="repo-detail-item"><div class="repo-detail-label">Size</div><div class="repo-detail-value">${(r.size / 1024).toFixed(1)} MB</div></div>
+        </div>
+        <div style="margin-top:16px">
+          <a href="${r.html_url}" target="_blank" class="btn btn-outline btn-sm">Open on GitHub ↗</a>
+          ${r.homepage ? `<a href="${escHtml(r.homepage)}" target="_blank" class="btn btn-outline btn-sm" style="margin-left:8px">Homepage ↗</a>` : ''}
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    $('repo-detail-body').innerHTML = `<div class="error-msg">${e.message}</div>`;
+  }
+}
+
+function confirmDeleteRepo(fullName) {
+  $('confirm-title').textContent = 'Delete Repository';
+  $('confirm-message').innerHTML = `Are you sure you want to delete <strong>${escHtml(fullName)}</strong>? This action cannot be undone.<br><br>Please type the repository name to confirm:`;
+  $('confirm-input-group').style.display = 'block';
+  $('confirm-input-label').textContent = 'Repository name';
+  $('confirm-input').value = '';
+  $('confirm-input').placeholder = fullName.split('/')[1];
+  showModal('confirm-modal');
+  state.confirmCallback = async () => {
+    const typed = $('confirm-input').value.trim();
+    const repoName = fullName.split('/')[1];
+    if (typed !== repoName) {
+      toast('Repository name does not match!', 'error');
+      return;
+    }
+    hideModal('confirm-modal');
+    try {
+      const res = await gh(`/repos/${fullName}`, { method: 'DELETE' });
+      if (res.status === 204) {
+        toast(`Deleted ${fullName}`, 'success');
+        loadRepos();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast(`Error: ${err.message || res.status}`, 'error');
+      }
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  };
+}
+
+async function createRepo() {
+  const name = $('new-repo-name').value.trim();
+  if (!name) { toast('Repository name is required', 'error'); return; }
+  const desc = $('new-repo-desc').value.trim();
+  const priv = q('input[name="repo-visibility"]:checked').value === 'private';
+  const init = $('new-repo-init').checked;
+
+  $('create-repo-btn').disabled = true;
+  try {
+    const res = await gh('/user/repos', {
+      method: 'POST',
+      body: JSON.stringify({ name, description: desc, private: priv, auto_init: init })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Failed to create repo');
+    toast(`Created ${data.full_name}`, 'success');
+    hideModal('new-repo-modal');
+    $('new-repo-name').value = '';
+    $('new-repo-desc').value = '';
+    $('new-repo-init').checked = false;
+    loadRepos();
+  } catch (e) {
+    toast(e.message, 'error');
+  } finally {
+    $('create-repo-btn').disabled = false;
+  }
+}
+
+// ── Issue Repo Select ─────────────────────────────────────
+function populateRepoSelects() {
+  const repos = state.repos;
+  const issueSelect = $('issues-repo-select');
+  const pullsSelect = $('pulls-repo-select');
+
+  const options = `<option value="">Select a repository...</option>` +
+    repos.map(r => `<option value="${escHtml(r.full_name)}">${escHtml(r.full_name)}</option>`).join('');
+
+  issueSelect.innerHTML = options;
+  pullsSelect.innerHTML = options;
+}
+
+async function loadIssueRepoSelect() {
+  if (!state.repos.length) {
+    // Load repos silently for selects
+    try {
+      const res = await gh('/user/repos?per_page=100&sort=updated&affiliation=owner,collaborator,organization_member');
+      if (res.ok) { state.repos = await res.json(); }
+    } catch (_) {}
+  }
+  populateRepoSelects();
+  $('issues-list').innerHTML = emptyHTML('Select a repository to view its issues.');
+}
+
+// ── Issues ───────────────────────────────────────────────
+async function loadIssues(repoFullName, state_filter = 'open') {
+  const container = $('issues-list');
+  if (!repoFullName) { container.innerHTML = emptyHTML('Select a repository to view its issues.'); return; }
+  container.innerHTML = loadingHTML();
+  try {
+    const res = await gh(`/repos/${repoFullName}/issues?state=${state_filter}&per_page=50&filter=all`);
+    if (!res.ok) throw new Error(`Failed (${res.status})`);
+    const issues = (await res.json()).filter(i => !i.pull_request); // exclude PRs
+    renderIssues(issues, repoFullName);
+  } catch (e) {
+    container.innerHTML = `<div class="error-msg">${e.message}</div>`;
+  }
+}
+
+function renderIssues(issues, repoFullName) {
+  const container = $('issues-list');
+  if (!issues.length) { container.innerHTML = emptyHTML('No issues found.'); return; }
+  container.innerHTML = issues.map(issue => `
+    <div class="list-item ${state.selectedIssues.has(issue.id) ? 'selected' : ''}" data-issue-id="${issue.id}">
+      <div class="batch-checkbox">
+        <input type="checkbox" class="issue-select-item" value="${issue.id}" ${state.selectedIssues.has(issue.id) ? 'checked' : ''} />
+      </div>
+      <div class="list-item-header" onclick="toggleIssueExpand(${issue.id})">
+        <div class="list-item-icon">
+          <button class="issue-expand-btn" id="expand-btn-${issue.id}">▶</button>
+        </div>
+        <div class="list-item-content">
+          <div class="list-item-title">${escHtml(issue.title)}</div>
+          <div class="list-item-meta">
+            <span>#${issue.number}</span>
+            <span>by ${escHtml(issue.user.login)}</span>
+            <span>${formatDate(issue.created_at)}</span>
+            ${issue.labels.map(l => `<span class="badge" style="background:rgba(${hexToRgb(l.color)},0.15);color:#${l.color};border:1px solid rgba(${hexToRgb(l.color)},0.4)">${escHtml(l.name)}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="list-item-actions">
+        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); showIssueDetail('${escHtml(repoFullName)}', ${issue.number})">Details</button>
+        <a href="${issue.html_url}" target="_blank" class="btn btn-outline btn-sm">View</a>
+        <button class="btn ${issue.state === 'open' ? 'btn-secondary' : 'btn-primary'} btn-sm" onclick="toggleIssue('${escHtml(repoFullName)}', ${issue.number}, '${issue.state}')">
+          ${issue.state === 'open' ? 'Close' : 'Reopen'}
+        </button>
+      </div>
+      <div class="issue-expanded-content" id="issue-expand-${issue.id}">
+        <div class="issue-description">${escHtml(issue.body || 'No description provided.')}</div>
+        
+        <div class="issue-meta-section">
+          <div class="issue-meta-label">Labels</div>
+          <div class="issue-labels">
+            ${issue.labels.length ? issue.labels.map(l => `
+              <span class="issue-label" style="background:rgba(${hexToRgb(l.color)},0.15);color:#${l.color};border:1px solid rgba(${hexToRgb(l.color)},0.4)">
+                ${escHtml(l.name)}
+                <span class="issue-label-remove" onclick="removeIssueLabel('${escHtml(repoFullName)}', ${issue.number}, '${escHtml(l.name)}')">×</span>
+              </span>
+            `).join('') : '<span style="color:var(--text-muted);font-size:12px">No labels</span>'}
+            <button class="btn btn-sm btn-outline" onclick="renderIssueLabelsForm('${escHtml(repoFullName)}', ${issue.number})">+ Add</button>
+          </div>
+        </div>
+        
+        <div class="issue-meta-section">
+          <div class="issue-meta-label">Assignees</div>
+          <div class="issue-assignees">
+            ${issue.assignees.length ? issue.assignees.map(a => `
+              <div class="issue-assignee">
+                <img src="${a.avatar_url}" alt="${a.login}" />
+                <span>${escHtml(a.login)}</span>
+                <span class="issue-assignee-remove" onclick="removeIssueAssignee('${escHtml(repoFullName)}', ${issue.number}, '${a.login}')">×</span>
+              </div>
+            `).join('') : '<span style="color:var(--text-muted);font-size:12px">No assignees</span>'}
+            <button class="btn btn-sm btn-outline" onclick="renderIssueAssigneesForm('${escHtml(repoFullName)}', ${issue.number})">+ Add</button>
+          </div>
+        </div>
+        
+        ${issue.milestone ? `
+        <div class="issue-meta-section">
+          <div class="issue-meta-label">Milestone</div>
+          <div class="issue-milestone">🏔️ ${escHtml(issue.milestone.title)}</div>
+        </div>
+        ` : ''}
+      </div>
+    </div>
+  `).join('');
+
+  qa('.issue-select-item').forEach(cb => {
+    cb.addEventListener('change', (e) => {
+      const issueId = parseInt(e.target.value);
+      if (e.target.checked) {
+        state.selectedIssues.add(issueId);
+      } else {
+        state.selectedIssues.delete(issueId);
+      }
+      updateIssuesBatchCount();
+      document.querySelector(`[data-issue-id="${issueId}"]`)?.classList.toggle('selected', state.selectedIssues.has(issueId));
+    });
+  });
+}
+
+function toggleIssueExpand(issueId) {
+  const btn = $('expand-btn-' + issueId);
+  const content = $('issue-expand-' + issueId);
+  if (btn && content) {
+    btn.classList.toggle('expanded');
+    content.classList.toggle('show');
+  }
+}
+
+function updateIssuesBatchCount() {
+  const count = state.selectedIssues.size;
+  const countEl = $('issues-batch-action-bar').querySelector('.batch-count');
+  if (countEl) countEl.textContent = `${count} selected`;
+  $('issues-batch-action-bar').classList.toggle('hidden', count === 0);
+}
+
+function toggleIssueSelectMode() {
+  state.issuesBatchMode = !state.issuesBatchMode;
+  const issuesSection = $('issues-section');
+  issuesSection.classList.toggle('issues-batch-mode', state.issuesBatchMode);
+  $('issues-batch-action-bar').classList.toggle('hidden', !state.issuesBatchMode || state.selectedIssues.size === 0);
+  
+  if (!state.issuesBatchMode) {
+    clearIssuesSelection();
+  }
+}
+
+function clearIssuesSelection() {
+  state.selectedIssues.clear();
+  qa('.issue-select-item').forEach(cb => cb.checked = false);
+  updateIssuesBatchCount();
+  qa('.list-item').forEach(item => item.classList.remove('selected'));
+}
+
+// Issue Detail Modal
+async function showIssueDetail(repoFullName, issueNumber) {
+  state.currentIssueRepo = repoFullName;
+  $('issue-detail-title').textContent = `Issue #${issueNumber}`;
+  $('issue-detail-body').innerHTML = loadingHTML();
+  showModal('issue-detail-modal');
+  
+  try {
+    const res = await gh(`/repos/${repoFullName}/issues/${issueNumber}`);
+    if (!res.ok) throw new Error('Failed to load issue');
+    const issue = await res.json();
+    renderIssueDetail(issue);
+  } catch (e) {
+    $('issue-detail-body').innerHTML = `<div class="error-msg">${e.message}</div>`;
+  }
+}
+
+function renderIssueDetail(issue) {
+  const statusIcon = issue.state === 'open'
+    ? `<svg viewBox="0 0 16 16" width="16" height="16" fill="#3fb950"><path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/><path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"/></svg>`
+    : `<svg viewBox="0 0 16 16" width="16" height="16" fill="#8b949e"><path d="M11.28 6.78a.75.75 0 00-1.06-1.06L7.25 8.69 5.78 7.22a.75.75 0 00-1.06 1.06l2 2a.75.75 0 001.06 0l3.5-3.5z"/><path fill-rule="evenodd" d="M16 8A8 8 0 110 8a8 8 0 0116 0zm-1.5 0a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z"/></svg>`;
+
+  $('issue-detail-body').innerHTML = `
+    <div class="issue-detail-header">
+      <div class="issue-detail-status">${statusIcon}</div>
+      <div>
+        <div class="issue-detail-title">${escHtml(issue.title)}</div>
+        <div class="issue-detail-meta">
+          <span class="badge badge-${issue.state}">${issue.state}</span>
+          <span>#${issue.number}</span>
+          <span>by ${escHtml(issue.user.login)}</span>
+          <span>${formatDate(issue.created_at)}</span>
+          ${issue.milestone ? `<span class="issue-milestone">🏔️ ${escHtml(issue.milestone.title)}</span>` : ''}
+        </div>
+      </div>
+    </div>
+    
+    <div class="issue-detail-body">
+      ${issue.body ? `<div class="issue-description">${escHtml(issue.body)}</div>` : '<p style="color:var(--text-muted)">No description provided.</p>'}
+    </div>
+    
+    <div class="issue-detail-section">
+      <div class="issue-detail-section-title">Labels</div>
+      <div class="issue-labels">
+        ${issue.labels.length ? issue.labels.map(l => `
+          <span class="issue-label" style="background:rgba(${hexToRgb(l.color)},0.15);color:#${l.color};border:1px solid rgba(${hexToRgb(l.color)},0.4)">
+            ${escHtml(l.name)}
+            <span class="issue-label-remove" onclick="removeIssueLabel('${issue.repository_url?.full_name || state.currentIssueRepo}', ${issue.number}, '${escHtml(l.name)}')">×</span>
+          </span>
+        `).join('') : '<span style="color:var(--text-muted)">No labels</span>'}
+        <button class="btn btn-sm btn-outline" onclick="renderIssueLabelsForm('${issue.repository_url?.full_name || state.currentIssueRepo}', ${issue.number})">+ Add Label</button>
+      </div>
+    </div>
+    
+    <div class="issue-detail-section">
+      <div class="issue-detail-section-title">Assignees</div>
+      <div class="issue-assignees">
+        ${issue.assignees.length ? issue.assignees.map(a => `
+          <div class="issue-assignee">
+            <img src="${a.avatar_url}" alt="${a.login}" />
+            <span>${escHtml(a.login)}</span>
+            <span class="issue-assignee-remove" onclick="removeIssueAssignee('${issue.repository_url?.full_name || state.currentIssueRepo}', ${issue.number}, '${a.login}')">×</span>
+          </div>
+        `).join('') : '<span style="color:var(--text-muted)">No assignees</span>'}
+        <button class="btn btn-sm btn-outline" onclick="renderIssueAssigneesForm('${issue.repository_url?.full_name || state.currentIssueRepo}', ${issue.number})">+ Add Assignee</button>
+      </div>
+    </div>
+    
+    <div class="issue-detail-section">
+      <div class="issue-detail-section-title">Comments</div>
+      <div id="issue-comments-list" class="issue-comments-list">
+        <div class="loading-overlay"><div class="spinner"></div><span>Loading comments...</span></div>
+      </div>
+    </div>
+    
+    <div class="issue-detail-actions">
+      <button class="btn ${issue.state === 'open' ? 'btn-secondary' : 'btn-primary'}" onclick="toggleIssue('${state.currentIssueRepo}', ${issue.number}, '${issue.state}')">
+        ${issue.state === 'open' ? 'Close Issue' : 'Reopen Issue'}
+      </button>
+      <button class="btn btn-outline" onclick="window.open('${issue.html_url}', '_blank')">Open on GitHub</button>
+    </div>
+    
+    <div class="issue-comment-form">
+      <h4>Add Comment</h4>
+      <textarea id="issue-comment-body" placeholder="Write a comment..."></textarea>
+      <button class="btn btn-primary" onclick="postIssueComment('${state.currentIssueRepo}', ${issue.number})">Post Comment</button>
+    </div>
+  `;
+  
+  loadIssueComments(issue.repository_url?.full_name || state.currentIssueRepo, issue.number);
+}
+
+async function loadIssueComments(repoFullName, issueNumber) {
+  const container = $('issue-comments-list');
+  try {
+    const res = await gh(`/repos/${repoFullName}/issues/${issueNumber}/comments`);
+    const comments = await res.json();
+    
+    if (!comments.length) {
+      container.innerHTML = '<p style="color:var(--text-muted)">No comments yet.</p>';
+      return;
+    }
+    
+    container.innerHTML = comments.map(c => `
+      <div class="issue-comment-item">
+        <img src="${c.user.avatar_url}" class="issue-comment-avatar" alt="${c.user.login}" />
+        <div class="issue-comment-content">
+          <div class="issue-comment-header">
+            <span class="issue-comment-author">${c.user.login}</span>
+            <span class="issue-comment-date">${formatDate(c.created_at)}</span>
+          </div>
+          <div class="issue-comment-body">${escHtml(c.body)}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    container.innerHTML = `<div class="error-msg">${e.message}</div>`;
+  }
+}
+
+async function postIssueComment(repoFullName, issueNumber) {
+  const body = $('issue-comment-body').value;
+  if (!body.trim()) { toast('Comment cannot be empty', 'error'); return; }
+  
+  try {
+    const res = await gh(`/repos/${repoFullName}/issues/${issueNumber}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ body })
+    });
+    
+    if (res.ok) {
+      toast('Comment posted', 'success');
+      $('issue-comment-body').value = '';
+      loadIssueComments(repoFullName, issueNumber);
+    } else {
+      const err = await res.json();
+      toast(`Error: ${err.message}`, 'error');
+    }
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+// Issue Labels & Assignees
+async function renderIssueLabelsForm(repoFullName, issueNumber) {
+  try {
+    const res = await gh(`/repos/${repoFullName}/labels`);
+    const labels = await res.json();
+    
+    const issueRes = await gh(`/repos/${repoFullName}/issues/${issueNumber}`);
+    const issue = await issueRes.json();
+    const existingLabels = issue.labels.map(l => l.name);
+    const availableLabels = labels.filter(l => !existingLabels.includes(l.name));
+    
+    if (availableLabels.length === 0) {
+      toast('No more labels available', 'info');
+      return;
+    }
+    
+    $('confirm-title').textContent = 'Add Label';
+    $('confirm-message').innerHTML = 'Select a label to add:';
+    $('confirm-input-group').style.display = 'block';
+    $('confirm-input-label').textContent = 'Label';
+    
+    const labelSelect = document.createElement('select');
+    labelSelect.id = 'issue-label-select';
+    labelSelect.innerHTML = availableLabels.map(l => 
+      `<option value="${escHtml(l.name)}">${escHtml(l.name)}</option>`
+    ).join('');
+    labelSelect.style.width = '100%';
+    
+    const inputGroup = $('confirm-input-group');
+    inputGroup.innerHTML = '';
+    inputGroup.appendChild(labelSelect);
+    
+    showModal('confirm-modal');
+    state.confirmCallback = async () => {
+      const labelName = $('issue-label-select').value;
+      await addIssueLabel(repoFullName, issueNumber, labelName);
+    };
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function addIssueLabel(repoFullName, issueNumber, labelName) {
+  try {
+    const res = await gh(`/repos/${repoFullName}/issues/${issueNumber}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ labels: [...new Set([labelName])] })
+    });
+    
+    if (res.ok) {
+      toast(`Label "${labelName}" added`, 'success');
+      const issue = await res.json();
+      renderIssueDetail(issue);
+    } else {
+      const err = await res.json();
+      toast(`Error: ${err.message}`, 'error');
+    }
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function removeIssueLabel(repoFullName, issueNumber, labelName) {
+  try {
+    const res = await gh(`/repos/${repoFullName}/issues/${issueNumber}`);
+    const issue = await res.json();
+    const newLabels = issue.labels.filter(l => l.name !== labelName).map(l => l.name);
+    
+    const updateRes = await gh(`/repos/${repoFullName}/issues/${issueNumber}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ labels: newLabels })
+    });
+    
+    if (updateRes.ok) {
+      toast(`Label "${labelName}" removed`, 'success');
+      const updated = await updateRes.json();
+      renderIssueDetail(updated);
+    } else {
+      const err = await updateRes.json();
+      toast(`Error: ${err.message}`, 'error');
+    }
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function renderIssueAssigneesForm(repoFullName, issueNumber) {
+  try {
+    const res = await gh(`/repos/${repoFullName}/collaborators`);
+    const collaborators = await res.json();
+    
+    const issueRes = await gh(`/repos/${repoFullName}/issues/${issueNumber}`);
+    const issue = await issueRes.json();
+    const existingAssignees = issue.assignees.map(a => a.login);
+    const availableAssignees = collaborators.filter(c => !existingAssignees.includes(c.login));
+    
+    if (availableAssignees.length === 0) {
+      toast('No more collaborators available to assign', 'info');
+      return;
+    }
+    
+    $('confirm-title').textContent = 'Add Assignee';
+    $('confirm-message').innerHTML = 'Select a collaborator to add:';
+    $('confirm-input-group').style.display = 'block';
+    $('confirm-input-label').textContent = 'Assignee';
+    
+    const assigneeSelect = document.createElement('select');
+    assigneeSelect.id = 'issue-assignee-select';
+    assigneeSelect.innerHTML = availableAssignees.map(c => 
+      `<option value="${c.login}">${c.login}</option>`
+    ).join('');
+    assigneeSelect.style.width = '100%';
+    
+    const inputGroup = $('confirm-input-group');
+    inputGroup.innerHTML = '';
+    inputGroup.appendChild(assigneeSelect);
+    
+    showModal('confirm-modal');
+    state.confirmCallback = async () => {
+      const assignee = $('issue-assignee-select').value;
+      await addIssueAssignee(repoFullName, issueNumber, assignee);
+    };
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function addIssueAssignee(repoFullName, issueNumber, assignee) {
+  try {
+    const res = await gh(`/repos/${repoFullName}/issues/${issueNumber}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ assignees: [assignee] })
+    });
+    
+    if (res.ok) {
+      toast(`Assignee "${assignee}" added`, 'success');
+      const issue = await res.json();
+      renderIssueDetail(issue);
+    } else {
+      const err = await res.json();
+      toast(`Error: ${err.message}`, 'error');
+    }
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function removeIssueAssignee(repoFullName, issueNumber, assignee) {
+  try {
+    const res = await gh(`/repos/${repoFullName}/issues/${issueNumber}`);
+    const issue = await res.json();
+    const newAssignees = issue.assignees.filter(a => a.login !== assignee).map(a => a.login);
+    
+    const updateRes = await gh(`/repos/${repoFullName}/issues/${issueNumber}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ assignees: newAssignees })
+    });
+    
+    if (updateRes.ok) {
+      toast(`Assignee "${assignee}" removed`, 'success');
+      const updated = await updateRes.json();
+      renderIssueDetail(updated);
+    } else {
+      const err = await updateRes.json();
+      toast(`Error: ${err.message}`, 'error');
+    }
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+// Issue Bulk Operations
+async function batchCloseIssues() {
+  const repo = $('issues-repo-select').value;
+  if (!repo || state.selectedIssues.size === 0) return;
+  
+  const confirmed = confirm(`Close ${state.selectedIssues.size} issue(s)?`);
+  if (!confirmed) return;
+  
+  let success = 0, failed = 0;
+  for (const issueId of state.selectedIssues) {
+    try {
+      const issueEl = document.querySelector(`[data-issue-id="${issueId}"]`);
+      const issueNumber = issueEl?.querySelector('.list-item-meta span')?.textContent?.replace('#', '');
+      if (!issueNumber) continue;
+      
+      const res = await gh(`/repos/${repo}/issues/${issueNumber}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ state: 'closed' })
+      });
+      if (res.ok) success++;
+      else failed++;
+    } catch { failed++; }
+  }
+  
+  toast(`Closed ${success} issue(s)${failed ? `, ${failed} failed` : ''}`, success > 0 ? 'success' : 'error');
+  clearIssuesSelection();
+  loadIssues(repo, state.issueFilter);
+}
+
+async function batchOpenIssues() {
+  const repo = $('issues-repo-select').value;
+  if (!repo || state.selectedIssues.size === 0) return;
+  
+  const confirmed = confirm(`Reopen ${state.selectedIssues.size} issue(s)?`);
+  if (!confirmed) return;
+  
+  let success = 0, failed = 0;
+  for (const issueId of state.selectedIssues) {
+    try {
+      const issueEl = document.querySelector(`[data-issue-id="${issueId}"]`);
+      const metaSpan = issueEl?.querySelector('.list-item-meta span');
+      const issueNumber = metaSpan?.textContent?.replace('#', '');
+      if (!issueNumber) continue;
+      
+      const res = await gh(`/repos/${repo}/issues/${issueNumber}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ state: 'open' })
+      });
+      if (res.ok) success++;
+      else failed++;
+    } catch { failed++; }
+  }
+  
+  toast(`Reopened ${success} issue(s)${failed ? `, ${failed} failed` : ''}`, success > 0 ? 'success' : 'error');
+  clearIssuesSelection();
+  loadIssues(repo, state.issueFilter);
+}
+
+async function toggleIssue(repoFullName, number, currentState) {
+  const newState = currentState === 'open' ? 'closed' : 'open';
+  try {
+    const res = await gh(`/repos/${repoFullName}/issues/${number}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ state: newState })
+    });
+    if (!res.ok) throw new Error('Failed to update issue');
+    toast(`Issue #${number} ${newState}`, 'success');
+    loadIssues(repoFullName, state.issueFilter);
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function createIssue() {
+  const repo = $('issues-repo-select').value;
+  if (!repo) { toast('Please select a repository first', 'error'); return; }
+  const title = $('new-issue-title').value.trim();
+  if (!title) { toast('Issue title is required', 'error'); return; }
+  const body = $('new-issue-body').value.trim();
+  const labelsRaw = $('new-issue-labels').value.trim();
+  const labels = labelsRaw ? labelsRaw.split(',').map(l => l.trim()).filter(Boolean) : [];
+
+  $('create-issue-btn').disabled = true;
+  try {
+    const res = await gh(`/repos/${repo}/issues`, {
+      method: 'POST',
+      body: JSON.stringify({ title, body, labels })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Failed');
+    toast(`Issue #${data.number} created`, 'success');
+    hideModal('new-issue-modal');
+    $('new-issue-title').value = '';
+    $('new-issue-body').value = '';
+    $('new-issue-labels').value = '';
+    loadIssues(repo, state.issueFilter);
+  } catch (e) {
+    toast(e.message, 'error');
+  } finally {
+    $('create-issue-btn').disabled = false;
+  }
+}
+
+// ── Pull Requests ────────────────────────────────────────
+async function loadPullRepoSelect() {
+  if (!state.repos.length) {
+    try {
+      const res = await gh('/user/repos?per_page=100&sort=updated&affiliation=owner,collaborator,organization_member');
+      if (res.ok) { state.repos = await res.json(); }
+    } catch (_) {}
+  }
+  populateRepoSelects();
+  $('pulls-list').innerHTML = emptyHTML('Select a repository to view pull requests.');
+}
+
+async function loadPulls(repoFullName, state_filter = 'open') {
+  const container = $('pulls-list');
+  if (!repoFullName) { container.innerHTML = emptyHTML('Select a repository to view pull requests.'); return; }
+  container.innerHTML = loadingHTML();
+  try {
+    const res = await gh(`/repos/${repoFullName}/pulls?state=${state_filter}&per_page=50`);
+    if (!res.ok) throw new Error(`Failed (${res.status})`);
+    const pulls = await res.json();
+    renderPulls(pulls, repoFullName);
+  } catch (e) {
+    container.innerHTML = `<div class="error-msg">${e.message}</div>`;
+  }
+}
+
+function renderPulls(pulls, repoFullName) {
+  const container = $('pulls-list');
+  if (!pulls.length) { container.innerHTML = emptyHTML('No pull requests found.'); return; }
+  container.innerHTML = pulls.map(pr => `
+    <div class="list-item" onclick="showPRDetail('${escHtml(repoFullName)}', ${pr.number})">
+      <div class="list-item-icon">
+        ${pr.state === 'open'
+          ? `<svg viewBox="0 0 16 16" width="16" height="16" fill="#3fb950"><path fill-rule="evenodd" d="M7.177 3.073L9.573.677A.25.25 0 0110 .854v4.792a.25.25 0 01-.427.177L7.177 3.427a.25.25 0 010-.354zM3.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122v5.256a2.251 2.251 0 11-1.5 0V5.372A2.25 2.25 0 011.5 3.25zM11 2.5h-1V4h1a1 1 0 011 1v5.628a2.251 2.251 0 101.5 0V5A2.5 2.5 0 0011 2.5zm1 10.25a.75.75 0 111.5 0 .75.75 0 01-1.5 0zM3.75 12a.75.75 0 100 1.5.75.75 0 000-1.5z"/></svg>`
+          : `<svg viewBox="0 0 16 16" width="16" height="16" fill="${pr.merged_at ? '#a371f7' : '#8b949e'}"><path fill-rule="evenodd" d="M5 3.254V3.25v.005a.75.75 0 110-.005v.004zm.45 1.9a2.25 2.25 0 10-1.95.218v5.256a2.25 2.25 0 101.5 0V7.123A5.735 5.735 0 009.25 9h1.378a2.251 2.251 0 100-1.5H9.25a4.25 4.25 0 01-3.8-2.346zM12.75 9a.75.75 0 100-1.5.75.75 0 000 1.5zm-8.5 4.5a.75.75 0 100-1.5.75.75 0 000 1.5z"/></svg>`}
+      </div>
+      <div class="list-item-content">
+        <div class="list-item-title">${escHtml(pr.title)}</div>
+        <div class="list-item-meta">
+          <span class="badge badge-${pr.merged_at ? 'merged' : pr.state}">${pr.merged_at ? 'Merged' : pr.state}</span>
+          <span>#${pr.number}</span>
+          <span>by ${escHtml(pr.user.login)}</span>
+          <span>${formatDate(pr.created_at)}</span>
+          <span>${escHtml(pr.head.label)} → ${escHtml(pr.base.label)}</span>
+        </div>
+      </div>
+      <div class="list-item-actions">
+        <a href="${pr.html_url}" target="_blank" class="btn btn-outline btn-sm">View</a>
+        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); showPRDetail('${escHtml(repoFullName)}', ${pr.number})">Details</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── PR Reviews Tab ───────────────────────────────────────
+function switchPRTab(tabName) {
+  qa('.pr-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.prTab === tabName);
+  });
+  qa('.pr-tab-content').forEach(content => {
+    content.classList.toggle('active', content.id === `pr-${tabName}-view`);
+  });
+  
+  if (tabName === 'reviews' && $('pulls-repo-select').value) {
+    loadReviewsDashboard($('pulls-repo-select').value);
+  }
+}
+
+async function loadReviewsDashboard(repoFullName) {
+  const statsGrid = $('reviews-stats-grid');
+  const reviewsList = $('reviews-list');
+  
+  statsGrid.innerHTML = '<div class="loading-overlay"><div class="spinner"></div><span>Loading reviews...</span></div>';
+  reviewsList.innerHTML = '';
+  
+  try {
+    const [pullsRes, reviewsRes] = await Promise.all([
+      gh(`/repos/${repoFullName}/pulls?state=all&per_page=50`),
+      gh(`/repos/${repoFullName}/pulls?state=all&per_page=50`)
+    ]);
+    
+    const pulls = pullsRes.ok ? await pullsRes.json() : [];
+    
+    let totalReviews = 0;
+    let approved = 0;
+    let changesRequested = 0;
+    let pending = 0;
+    const reviewsData = [];
+    
+    for (const pr of pulls.slice(0, 20)) {
+      try {
+        const rRes = await gh(`/repos/${repoFullName}/pulls/${pr.number}/reviews`);
+        if (rRes.ok) {
+          const reviews = await rRes.json();
+          totalReviews += reviews.length;
+          reviews.forEach(r => {
+            if (r.state === 'APPROVED') approved++;
+            else if (r.state === 'CHANGES_REQUESTED') changesRequested++;
+            else if (r.state === 'PENDING') pending++;
+          });
+          if (reviews.length > 0) {
+            reviewsData.push({ pr, reviews: reviews.slice(0, 3) });
+          }
+        }
+      } catch (_) {}
+    }
+    
+    statsGrid.innerHTML = `
+      <div class="reviews-stat-card"><div class="reviews-stat-icon">📋</div><div class="reviews-stat-value">${pulls.length}</div><div class="reviews-stat-label">Total PRs</div></div>
+      <div class="reviews-stat-card"><div class="reviews-stat-icon">✅</div><div class="reviews-stat-value">${approved}</div><div class="reviews-stat-label">Approved</div></div>
+      <div class="reviews-stat-card"><div class="reviews-stat-icon">🔄</div><div class="reviews-stat-value">${changesRequested}</div><div class="reviews-stat-label">Changes Requested</div></div>
+      <div class="reviews-stat-card"><div class="reviews-stat-icon">⏳</div><div class="reviews-stat-value">${pending}</div><div class="reviews-stat-label">Pending</div></div>
+    `;
+    
+    if (reviewsData.length === 0) {
+      reviewsList.innerHTML = '<div class="empty-state"><p>No reviews found for recent pull requests.</p></div>';
+      return;
+    }
+    
+    reviewsList.innerHTML = reviewsData.map(item => `
+      <div class="dashboard-panel" style="margin-bottom: 16px;">
+        <h3 class="panel-title">#${item.pr.number}: ${escHtml(item.pr.title)}</h3>
+        <div class="activity-list">
+          ${item.reviews.map(r => `
+            <div class="activity-item">
+              <span class="activity-icon">${r.state === 'APPROVED' ? '✅' : r.state === 'CHANGES_REQUESTED' ? '🔄' : r.state === 'COMMENTED' ? '💬' : '⏳'}</span>
+              <div class="activity-body">
+                <div class="activity-desc"><strong>${escHtml(r.user.login)}</strong> ${r.state === 'APPROVED' ? 'approved' : r.state === 'CHANGES_REQUESTED' ? 'requested changes' : r.state === 'COMMENTED' ? 'commented on' : 'reviewed'}</div>
+                <div class="activity-time">${r.submitted_at ? formatDate(r.submitted_at) : 'Pending'}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+    
+  } catch (e) {
+    statsGrid.innerHTML = `<div class="error-msg">${e.message}</div>`;
+  }
+}
+
+// ── PR Detail Modal ────────────────────────────────────────
+async function showPRDetail(repoFullName, prNumber) {
+  showModal('pr-detail-modal');
+  $('pr-detail-body').innerHTML = loadingHTML();
+  
+  try {
+    const [prRes, reviewsRes, commentsRes, labelsRes, assigneesRes] = await Promise.all([
+      gh(`/repos/${repoFullName}/pulls/${prNumber}`),
+      gh(`/repos/${repoFullName}/pulls/${prNumber}/reviews`),
+      gh(`/repos/${repoFullName}/pulls/${prNumber}/comments`),
+      gh(`/repos/${repoFullName}/issues/${prNumber}/labels`),
+      gh(`/repos/${repoFullName}/pulls/${prNumber}/assignees`)
+    ]);
+    
+    const pr = prRes.ok ? await prRes.json() : null;
+    if (!pr) throw new Error('Failed to load PR');
+    
+    const reviews = reviewsRes.ok ? await reviewsRes.json() : [];
+    const comments = commentsRes.ok ? await commentsRes.json() : [];
+    const labels = labelsRes.ok ? await labelsRes.json() : [];
+    const assignees = assigneesRes.ok ? await assigneesRes.json() : [];
+    
+    $('pr-detail-body').innerHTML = `
+      <div class="pr-detail-header">
+        <div class="pr-detail-title">${escHtml(pr.title)}</div>
+      </div>
+      <div class="pr-detail-meta">
+        <span class="badge badge-${pr.merged_at ? 'merged' : pr.state}">${pr.merged_at ? 'Merged' : pr.state}</span>
+        <span>#${pr.number}</span>
+        <span>by ${escHtml(pr.user.login)}</span>
+        <span>${formatDate(pr.created_at)}</span>
+      </div>
+      <div class="pr-branches">
+        <span class="pr-branch-arrow">${escHtml(pr.head.ref)}</span>
+        <span>→</span>
+        <span class="pr-branch-arrow">${escHtml(pr.base.ref)}</span>
+      </div>
+      ${pr.body ? `<div class="pr-detail-body"><div class="item-detail-body">${escHtml(pr.body)}</div></div>` : ''}
+      
+      ${labels.length > 0 ? `
+        <div class="pr-detail-section">
+          <div class="pr-detail-section-title">Labels</div>
+          <div>
+            ${labels.map(l => `<span class="pr-label" style="background:rgba(${hexToRgb(l.color)},0.15);color:#${l.color};border:1px solid rgba(${hexToRgb(l.color)},0.4)">${escHtml(l.name)}</span>`).join('')}
+          </div>
+        </div>
+      ` : ''}
+      
+      ${assignees.length > 0 ? `
+        <div class="pr-detail-section">
+          <div class="pr-detail-section-title">Assignees</div>
+          <div>
+            ${assignees.map(a => `<span class="pr-assignee"><img src="${a.avatar_url}" alt="${escHtml(a.login)}"/>${escHtml(a.login)}</span>`).join('')}
+          </div>
+        </div>
+      ` : ''}
+      
+      ${reviews.length > 0 ? `
+        <div class="pr-detail-section">
+          <div class="pr-detail-section-title">Reviews (${reviews.length})</div>
+          ${reviews.map(r => `
+            <div class="pr-review-item">
+              <img class="pr-review-avatar" src="${r.user.avatar_url}" alt="${escHtml(r.user.login)}"/>
+              <div class="pr-review-content">
+                <div class="pr-review-author">${escHtml(r.user.login)}</div>
+                <div class="pr-review-state ${r.state.toLowerCase().replace('_', '-')}">${r.state === 'APPROVED' ? '✅ Approved' : r.state === 'CHANGES_REQUESTED' ? '🔄 Changes Requested' : r.state === 'COMMENTED' ? '💬 Commented' : '⏳ Pending'}</div>
+                ${r.body ? `<div class="pr-review-body">${escHtml(r.body)}</div>` : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+      
+      ${comments.length > 0 ? `
+        <div class="pr-detail-section">
+          <div class="pr-detail-section-title">Comments (${comments.length})</div>
+          ${comments.map(c => `
+            <div class="pr-comment-item">
+              <img class="pr-comment-avatar" src="${c.user.avatar_url}" alt="${escHtml(c.user.login)}"/>
+              <div class="pr-comment-content">
+                <div class="pr-comment-header">
+                  <span class="pr-comment-author">${escHtml(c.user.login)}</span>
+                  <span class="pr-comment-date">${formatDate(c.created_at)}</span>
+                </div>
+                <div class="pr-comment-body">${escHtml(c.body)}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+    `;
+    
+    $('pr-detail-link').href = pr.html_url;
+    
+  } catch (e) {
+    $('pr-detail-body').innerHTML = `<div class="error-msg">${e.message}</div>`;
+  }
+}
+
+// ── Create PR Modal ────────────────────────────────────────
+async function showCreatePRModal() {
+  const repo = $('pulls-repo-select').value;
+  if (!repo) { toast('Please select a repository first', 'error'); return; }
+  
+  showModal('create-pr-modal');
+  $('create-pr-title').value = '';
+  $('create-pr-body').value = '';
+  $('create-pr-draft').checked = false;
+  $('create-pr-auto-merge').checked = false;
+  
+  try {
+    const [baseRes, headRes] = await Promise.all([
+      gh(`/repos/${repo}/branches`),
+      gh(`/repos/${repo}/branches`)
+    ]);
+    
+    const branches = baseRes.ok ? await baseRes.json() : [];
+    const options = branches.map(b => `<option value="${escHtml(b.name)}">${escHtml(b.name)}</option>`).join('');
+    
+    $('create-pr-base').innerHTML = options;
+    $('create-pr-head').innerHTML = options;
+    
+    if (branches.length > 1) {
+      $('create-pr-base').value = branches[0].name;
+      $('create-pr-head').value = branches[1].name;
+    }
+    
+  } catch (e) {
+    toast('Failed to load branches', 'error');
+  }
+}
+
+async function createPR() {
+  const repo = $('pulls-repo-select').value;
+  if (!repo) { toast('Please select a repository first', 'error'); return; }
+  
+  const title = $('create-pr-title').value.trim();
+  if (!title) { toast('PR title is required', 'error'); return; }
+  
+  const base = $('create-pr-base').value;
+  const head = $('create-pr-head').value;
+  if (!base || !head) { toast('Please select base and head branches', 'error'); return; }
+  
+  const body = $('create-pr-body').value.trim();
+  const draft = $('create-pr-draft').checked;
+  const autoMerge = $('create-pr-auto-merge').checked;
+  
+  $('create-pr-btn').disabled = true;
+  
+  try {
+    const res = await gh(`/repos/${repo}/pulls`, {
+      method: 'POST',
+      body: JSON.stringify({ title, body, base, head, draft })
+    });
+    
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Failed to create PR');
+    
+    if (autoMerge && data.number) {
+      try {
+        await gh(`/repos/${repo}/pulls/${data.number}/merge`, { method: 'PUT', body: JSON.stringify({ merge_method: 'squash' }) });
+      } catch (_) {}
+    }
+    
+    toast(`Pull Request #${data.number} created`, 'success');
+    hideModal('create-pr-modal');
+    loadPulls(repo, state.pullFilter);
+    
+  } catch (e) {
+    toast(e.message, 'error');
+  } finally {
+    $('create-pr-btn').disabled = false;
+  }
+}
+
+// ── Gists ────────────────────────────────────────────────
+async function loadGists() {
+  const container = $('gists-list');
+  container.innerHTML = loadingHTML();
+  try {
+    const res = await gh('/gists?per_page=100');
+    if (!res.ok) throw new Error(`Failed (${res.status})`);
+    const gists = await res.json();
+    renderGists(gists);
+  } catch (e) {
+    container.innerHTML = `<div class="error-msg">${e.message}</div>`;
+  }
+}
+
+function renderGists(gists) {
+  const container = $('gists-list');
+  if (!gists.length) { container.innerHTML = emptyHTML('No gists found. Create your first gist!'); return; }
+  container.innerHTML = gists.map(g => {
+    const files = Object.keys(g.files);
+    const firstName = files[0] || 'untitled';
+    return `
+    <div class="gist-card">
+      <div class="gist-filename">${escHtml(firstName)}${files.length > 1 ? ` +${files.length - 1} more` : ''}</div>
+      <div class="gist-desc">${escHtml(g.description || '')}</div>
+      <div class="gist-meta">
+        ${g.public ? '🌍 Public' : '🔒 Secret'} · Created ${formatDate(g.created_at)} · Updated ${formatDate(g.updated_at)}
+      </div>
+      <div class="gist-card-actions">
+        <a href="${g.html_url}" target="_blank" class="btn btn-outline btn-sm">Open</a>
+        <button class="btn btn-danger btn-sm" onclick="confirmDeleteGist('${escHtml(g.id)}', '${escHtml(firstName)}')">Delete</button>
+      </div>
+    </div>
+    `;
+  }).join('');
+}
+
+function confirmDeleteGist(id, name) {
+  $('confirm-title').textContent = 'Delete Gist';
+  $('confirm-message').innerHTML = `Are you sure you want to delete <strong>${escHtml(name)}</strong>? This cannot be undone.`;
+  $('confirm-input-group').style.display = 'none';
+  showModal('confirm-modal');
+  state.confirmCallback = async () => {
+    hideModal('confirm-modal');
+    try {
+      const res = await gh(`/gists/${id}`, { method: 'DELETE' });
+      if (res.status === 204) { toast('Gist deleted', 'success'); loadGists(); }
+      else { toast('Failed to delete gist', 'error'); }
+    } catch (e) { toast(e.message, 'error'); }
+  };
+}
+
+async function createGist() {
+  const filename = $('new-gist-filename').value.trim();
+  if (!filename) { toast('Filename is required', 'error'); return; }
+  const content = $('new-gist-content').value;
+  if (!content.trim()) { toast('Content is required', 'error'); return; }
+  const desc = $('new-gist-desc').value.trim();
+  const isPublic = q('input[name="gist-visibility"]:checked').value === 'public';
+
+  $('create-gist-btn').disabled = true;
+  try {
+    const res = await gh('/gists', {
+      method: 'POST',
+      body: JSON.stringify({
+        description: desc,
+        public: isPublic,
+        files: { [filename]: { content } }
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Failed');
+    toast('Gist created!', 'success');
+    hideModal('new-gist-modal');
+    $('new-gist-filename').value = '';
+    $('new-gist-desc').value = '';
+    $('new-gist-content').value = '';
+    loadGists();
+  } catch (e) {
+    toast(e.message, 'error');
+  } finally {
+    $('create-gist-btn').disabled = false;
+  }
+}
+
+// ── Profile ──────────────────────────────────────────────
+async function loadProfile() {
+  const container = $('profile-card');
+  container.innerHTML = loadingHTML();
+  try {
+    const res = await gh('/user');
+    if (!res.ok) throw new Error(`Failed (${res.status})`);
+    const u = await res.json();
+    container.innerHTML = `
+      <div class="profile-card">
+        <img class="profile-avatar" src="${u.avatar_url}" alt="${escHtml(u.login)}" />
+        <div class="profile-info">
+          <div class="profile-name">${escHtml(u.name || u.login)}</div>
+          <div class="profile-login">@${escHtml(u.login)}</div>
+          ${u.bio ? `<div class="profile-bio">${escHtml(u.bio)}</div>` : ''}
+          <div class="profile-stats">
+            <div class="profile-stat"><span class="stat-value">${u.public_repos}</span><span class="stat-label">Repos</span></div>
+            <div class="profile-stat"><span class="stat-value">${u.followers}</span><span class="stat-label">Followers</span></div>
+            <div class="profile-stat"><span class="stat-value">${u.following}</span><span class="stat-label">Following</span></div>
+            <div class="profile-stat"><span class="stat-value">${u.public_gists}</span><span class="stat-label">Gists</span></div>
+          </div>
+          <div class="profile-links">
+            ${u.company ? `<div class="profile-link">🏢 ${escHtml(u.company)}</div>` : ''}
+            ${u.location ? `<div class="profile-link">📍 ${escHtml(u.location)}</div>` : ''}
+            ${u.email ? `<div class="profile-link">✉️ ${escHtml(u.email)}</div>` : ''}
+            ${u.blog ? `<div class="profile-link">🔗 <a href="${escHtml(u.blog)}" target="_blank" style="color:var(--accent-blue-hover)">${escHtml(u.blog)}</a></div>` : ''}
+            ${u.twitter_username ? `<div class="profile-link">🐦 @${escHtml(u.twitter_username)}</div>` : ''}
+          </div>
+          <div style="margin-top:16px">
+            <a href="${u.html_url}" target="_blank" class="btn btn-outline btn-sm">View on GitHub ↗</a>
+          </div>
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    container.innerHTML = `<div class="error-msg">${e.message}</div>`;
+  }
+}
+
+// ── Helpers ──────────────────────────────────────────────
+function escHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+function hexToRgb(hex) {
+  if (!hex) return '139,148,158';
+  const result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.replace('#',''));
+  return result ? `${parseInt(result[1],16)},${parseInt(result[2],16)},${parseInt(result[3],16)}` : '139,148,158';
+}
+
+// ── Event Listeners ───────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Load saved theme
+  const savedTheme = localStorage.getItem('gh_theme') || 'dark';
+  state.theme = savedTheme;
+  document.documentElement.setAttribute('data-theme', savedTheme);
+
+  // Mobile sidebar backdrop
+  const backdrop = document.createElement('div');
+  backdrop.id = 'sidebar-backdrop';
+  backdrop.className = 'sidebar-backdrop';
+  backdrop.addEventListener('click', closeSidebar);
+  document.body.appendChild(backdrop);
+
+  // Mobile header
+  const mobileHeader = document.createElement('div');
+  mobileHeader.className = 'mobile-header';
+  mobileHeader.innerHTML = `
+    <button id="mobile-menu-btn" style="background:none;border:none;color:var(--text-primary);font-size:22px;cursor:pointer;margin-right:12px">☰</button>
+    <svg height="24" viewBox="0 0 16 16" width="24" fill="var(--text-primary)"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+    <span style="font-weight:600;margin-left:8px;font-size:15px">GitHub Manager</span>
+  `;
+  document.querySelector('.main-content').prepend(mobileHeader);
+  document.getElementById('mobile-menu-btn').addEventListener('click', openSidebar);
+
+  // ── Login ──────────────────────────────────────────────
+  const loginBtn = $('login-btn');
+  loginBtn.addEventListener('click', async () => {
+    const pat = $('pat-input').value.trim();
+    if (!pat) { $('login-error').textContent = 'Please enter your PAT.'; $('login-error').classList.remove('hidden'); return; }
+    $('login-text').textContent = 'Connecting…';
+    $('login-spinner').classList.remove('hidden');
+    loginBtn.disabled = true;
+    $('login-error').classList.add('hidden');
+    try {
+      await login(pat);
+      showAppScreen();
+    } catch (e) {
+      $('login-error').textContent = `Authentication failed: ${e.message}`;
+      $('login-error').classList.remove('hidden');
+    } finally {
+      $('login-text').textContent = 'Connect to GitHub';
+      $('login-spinner').classList.add('hidden');
+      loginBtn.disabled = false;
+    }
+  });
+
+  $('pat-input').addEventListener('keydown', e => { if (e.key === 'Enter') loginBtn.click(); });
+
+  $('toggle-pat').addEventListener('click', () => {
+    const input = $('pat-input');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  });
+
+  // ── Logout ─────────────────────────────────────────────
+  $('logout-btn').addEventListener('click', logout);
+
+  // ── Navigation ─────────────────────────────────────────
+  qa('.nav-item').forEach(btn => {
+    btn.addEventListener('click', () => navigateTo(btn.dataset.section));
+  });
+
+  // ── Modal closes ───────────────────────────────────────
+  qa('.modal-close, [data-modal]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const modalId = btn.dataset.modal || btn.closest('.modal')?.id;
+      if (modalId) hideModal(modalId);
+    });
+  });
+
+  $('modal-overlay').addEventListener('click', e => {
+    if (e.target === $('modal-overlay')) hideAllModals();
+  });
+
+  // ── New Repo ───────────────────────────────────────────
+  $('new-repo-btn').addEventListener('click', () => showModal('new-repo-modal'));
+  $('create-repo-btn').addEventListener('click', createRepo);
+
+  // ── Repo Search ────────────────────────────────────────
+  $('repo-search').addEventListener('input', () => renderRepoList());
+
+  // ── Batch Operations ─────────────────────────────────────
+  $('batch-toggle-btn').addEventListener('click', toggleBatchMode);
+  $('batch-archive-btn').addEventListener('click', batchArchive);
+  $('batch-delete-btn').addEventListener('click', batchDelete);
+  $('batch-clear-btn').addEventListener('click', () => { clearBatchSelection(); toggleBatchMode(); });
+
+  // Batch select all
+  $('batch-select-all').addEventListener('change', (e) => {
+    if (e.target.checked) {
+      qa('.batch-select-item').forEach(cb => {
+        cb.checked = true;
+        state.selectedRepos.add(cb.value);
+      });
+    } else {
+      clearBatchSelection();
+    }
+    updateBatchCount();
+  });
+
+  // Individual batch select
+  document.addEventListener('change', (e) => {
+    if (e.target.classList.contains('batch-select-item')) {
+      if (e.target.checked) {
+        state.selectedRepos.add(e.target.value);
+      } else {
+        state.selectedRepos.delete(e.target.value);
+      }
+      updateBatchCount();
+    }
+  });
+
+  // ── Filter Event Listeners ───────────────────────────────
+  $('repo-sort').addEventListener('change', (e) => { state.repoSort = e.target.value; renderRepoList(); });
+  $('repo-lang-filter').addEventListener('change', (e) => { state.repoLangFilter = e.target.value; renderRepoList(); });
+  $('repo-vis-filter').addEventListener('change', (e) => { state.repoVisFilter = e.target.value; renderRepoList(); });
+  $('repo-show-archived').addEventListener('change', (e) => { state.repoShowArchived = e.target.checked; renderRepoList(); });
+
+  // ── Export ──────────────────────────────────────────────
+  $('export-btn').addEventListener('click', showExportModal);
+  $('export-download-btn').addEventListener('click', exportRepos);
+
+  // ── Three-Dot Menu ───────────────────────────────────────
+  document.addEventListener('click', (e) => {
+    const menuBtn = e.target.closest('.repo-menu-btn');
+    if (menuBtn) {
+      e.stopPropagation();
+      toggleRepoMenu(menuBtn);
+    } else if (!e.target.closest('.dropdown-menu')) {
+      qa('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+      activeDropdown = null;
+    }
+  });
+
+  $('repo-dropdown').addEventListener('click', handleDropdownAction);
+
+  // ── Webhook Events ───────────────────────────────────────
+  $('add-webhook-btn').addEventListener('click', showAddWebhookForm);
+  $('save-webhook-btn').addEventListener('click', saveWebhook);
+
+  // ── Collaborator Events ──────────────────────────────────
+  $('add-collab-btn').addEventListener('click', () => showModal('collab-form-modal'));
+  $('save-collab-btn').addEventListener('click', addCollaborator);
+
+  // ── Branch Protection Events ───────────────────────────
+  $('protection-branch').addEventListener('change', (e) => {
+    const repo = $('protection-repo-name').textContent;
+    loadProtectionRules(repo, e.target.value);
+  });
+  $('save-protection-btn').addEventListener('click', saveProtectionRules);
+  $('delete-protection-btn').addEventListener('click', deleteProtectionRules);
+
+  // ── Issues ─────────────────────────────────────────────
+  $('new-issue-btn').addEventListener('click', () => {
+    if (!$('issues-repo-select').value) { toast('Please select a repository first', 'error'); return; }
+    showModal('new-issue-modal');
+  });
+  $('create-issue-btn').addEventListener('click', createIssue);
+
+  $('issues-repo-select').addEventListener('change', () => {
+    loadIssues($('issues-repo-select').value, state.issueFilter);
+  });
+
+  document.querySelectorAll('#issues-section .filter-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#issues-section .filter-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.issueFilter = btn.dataset.state;
+      loadIssues($('issues-repo-select').value, state.issueFilter);
+    });
+  });
+
+  // Issue Batch Operations
+  $('issues-batch-toggle-btn').addEventListener('click', toggleIssueSelectMode);
+  $('issues-batch-close-btn').addEventListener('click', batchCloseIssues);
+  $('issues-batch-reopen-btn').addEventListener('click', batchOpenIssues);
+  $('issues-batch-clear-btn').addEventListener('click', () => {
+    clearIssuesSelection();
+    toggleIssueSelectMode();
+  });
+
+  // ── Pull Requests ──────────────────────────────────────
+  $('pulls-repo-select').addEventListener('change', () => {
+    loadPulls($('pulls-repo-select').value, state.pullFilter);
+  });
+
+  document.querySelectorAll('#pulls-section .filter-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#pulls-section .filter-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.pullFilter = btn.dataset.state;
+      loadPulls($('pulls-repo-select').value, state.pullFilter);
+    });
+  });
+
+  // PR Tabs
+  qa('.pr-tab').forEach(btn => {
+    btn.addEventListener('click', () => switchPRTab(btn.dataset.prTab));
+  });
+
+  // New PR button
+  $('new-pr-btn').addEventListener('click', showCreatePRModal);
+  $('create-pr-btn').addEventListener('click', createPR);
+
+  // ── Gists ──────────────────────────────────────────────
+  $('new-gist-btn').addEventListener('click', () => showModal('new-gist-modal'));
+  $('create-gist-btn').addEventListener('click', createGist);
+
+  // ── Confirm ────────────────────────────────────────────
+  $('confirm-action-btn').addEventListener('click', () => {
+    if (state.confirmCallback) state.confirmCallback();
+  });
+
+  // ── Hamburger sidebar toggle ────────────────────────────
+  $('sidebar-toggle').addEventListener('click', () => {
+    if ($('sidebar').classList.contains('open')) closeSidebar();
+    else openSidebar();
+  });
+
+  // ── Theme toggle button ────────────────────────────
+  $('theme-toggle-btn').addEventListener('click', () => {
+    const newTheme = state.theme === 'dark' ? 'light' : 'dark';
+    state.theme = newTheme;
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('gh_theme', newTheme);
+  });
+
+  // ── Dashboard Refresh ───────────────────────────────────
+  $('dashboard-refresh-btn').addEventListener('click', () => {
+    state.dashboardRefreshKey++;
+    switchDashboardTab(state.dashboardTab);
+    toast('Dashboard refreshed', 'info');
+  });
+
+  // ── Dashboard Tab Navigation ─────────────────────────────
+  qa('.dashboard-tabs .tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchDashboardTab(btn.dataset.tab));
+  });
+
+  // ── Auto-login from session ────────────────────────────
+  const savedPat = loadPat();
+  if (savedPat) {
+    $('login-text').textContent = 'Reconnecting…';
+    $('login-spinner').classList.remove('hidden');
+    login(savedPat)
+      .then(() => showAppScreen())
+      .catch(() => { clearPat(); showLoginScreen(); })
+      .finally(() => {
+        $('login-text').textContent = 'Connect to GitHub';
+        $('login-spinner').classList.add('hidden');
+      });
+  } else {
+    showLoginScreen();
+  }
+});
+
+// ── Health Tab ──────────────────────────────────────────
+async function loadHealthData() {
+  const container = $('health-content');
+  container.innerHTML = `
+    <div class="health-controls">
+      <select id="health-repo-select" class="repo-select">
+        <option value="">Select a repository...</option>
+        ${state.repos.map(r => `<option value="${escHtml(r.full_name)}">${escHtml(r.full_name)}</option>`).join('')}
+      </select>
+    </div>
+    <div id="health-metrics" class="health-grid">
+      <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">Select a repository</div></div>
+    </div>`;
+  
+  $('health-repo-select').addEventListener('change', () => {
+    const repo = $('health-repo-select').value;
+    if (repo) loadHealthMetrics(repo);
+  });
+  
+  state.healthData = { loaded: true };
+}
+
+async function loadHealthMetrics(repoFullName) {
+  const container = $('health-metrics');
+  container.innerHTML = `<div class="metric-card"><div class="loading-overlay"><div class="spinner"></div><span>Loading...</span></div></div>`;
+  
+  try {
+    const [statsRes, issuesRes, pullsRes] = await Promise.all([
+      gh(`/repos/${repoFullName}/stats/commit_activity`),
+      gh(`/repos/${repoFullName}/issues?state=closed&per_page=100`),
+      gh(`/repos/${repoFullName}/pulls?state=all&per_page=100`)
+    ]);
+    
+    const commitData = statsRes.ok ? await statsRes.json() : [];
+    const issues = issuesRes.ok ? await issuesRes.json() : [];
+    const pulls = pullsRes.ok ? await pullsRes.json() : [];
+    
+    const totalCommits = commitData.reduce((sum, week) => sum + week.total, 0);
+    const avgCommitsPerWeek = commitData.length > 0 ? Math.round(totalCommits / commitData.length) : 0;
+    
+    const resolvedIssues = issues.filter(i => !i.pull_request).slice(0, 30);
+    let avgResolutionDays = 0;
+    if (resolvedIssues.length > 0) {
+      const totalDays = resolvedIssues.reduce((sum, issue) => {
+        const created = new Date(issue.created_at);
+        const closed = new Date(issue.closed_at);
+        return sum + (closed - created) / (1000 * 60 * 60 * 24);
+      }, 0);
+      avgResolutionDays = Math.round(totalDays / resolvedIssues.length);
+    }
+    
+    const closedPRs = pulls.filter(pr => pr.merged_at !== null || pr.state === 'closed');
+    const mergedPRs = pulls.filter(pr => pr.merged_at !== null);
+    const mergeRate = closedPRs.length > 0 ? Math.round((mergedPRs.length / closedPRs.length) * 100) : 0;
+    
+    container.innerHTML = `
+      <div class="metric-card"><div class="metric-value">${totalCommits.toLocaleString()}</div><div class="metric-label">Total Commits (52 weeks)</div><div class="metric-detail">Avg ${avgCommitsPerWeek}/week</div></div>
+      <div class="metric-card"><div class="metric-value">${avgResolutionDays}d</div><div class="metric-label">Avg Issue Resolution</div><div class="metric-detail">Based on last ${resolvedIssues.length} closed issues</div></div>
+      <div class="metric-card"><div class="metric-value">${mergeRate}%</div><div class="metric-label">PR Merge Rate</div><div class="metric-detail">${mergedPRs.length}/${closedPRs.length} merged</div></div>
+      <div class="metric-card" style="grid-column: 1 / -1"><div class="metric-label">Commit Activity (Last 52 Weeks)</div><div class="commit-chart" id="commit-chart"></div></div>`;
+    
+    renderCommitChart('commit-chart', commitData);
+    
+  } catch (e) {
+    container.innerHTML = `<div class="error-msg">Failed to load health metrics: ${e.message}</div>`;
+  }
+}
+
+function renderCommitChart(containerId, commitData) {
+  const container = $(containerId);
+  if (!container || !commitData || commitData.length === 0) {
+    container.innerHTML = '<div class="commit-chart-empty">No commit data available</div>';
+    return;
+  }
+  
+  const maxCommits = Math.max(...commitData.map(w => w.total), 1);
+  
+  container.innerHTML = commitData.map(week => {
+    const height = week.total > 0 ? Math.max((week.total / maxCommits) * 100, 5) : 2;
+    return `<div class="commit-week" style="height: ${height}%" title="${week.total} commits"></div>`;
+  }).join('');
+}
+
+// ── Contributors Tab ─────────────────────────────────────
+async function loadContributorsData() {
+  const container = $('contributors-content');
+  container.innerHTML = `
+    <div class="contributors-controls" style="margin-bottom: 20px;">
+      <select id="contributors-repo-select" class="repo-select">
+        <option value="">Select a repository...</option>
+        ${state.repos.map(r => `<option value="${escHtml(r.full_name)}">${escHtml(r.full_name)}</option>`).join('')}
+      </select>
+    </div>
+    <div id="contributors-list" class="contributors-grid">
+      <div class="empty-state"><p>Select a repository to view contributors.</p></div>
+    </div>`;
+  
+  $('contributors-repo-select').addEventListener('change', () => {
+    const repo = $('contributors-repo-select').value;
+    if (repo) loadContributors(repo);
+  });
+  
+  state.contributorsData = { loaded: true };
+}
+
+async function loadContributors(repoFullName) {
+  const container = $('contributors-list');
+  container.innerHTML = `<div class="contributor-card"><div class="loading-overlay"><div class="spinner"></div></div></div>`;
+  
+  try {
+    const res = await gh(`/repos/${repoFullName}/contributors?per_page=20`);
+    
+    if (!res.ok) {
+      if (res.status === 404) { container.innerHTML = '<div class="error-msg">Repository not found or has no contributors.</div>'; return; }
+      throw new Error(`Failed to load contributors (${res.status})`);
+    }
+    
+    const contributors = await res.json();
+    
+    if (!contributors || contributors.length === 0) { container.innerHTML = '<div class="empty-state"><p>No contributors found for this repository.</p></div>'; return; }
+    
+    const totalContributions = contributors.reduce((sum, c) => sum + c.contributions, 0);
+    
+    container.innerHTML = contributors.map(contributor => {
+      const percent = Math.round((contributor.contributions / totalContributions) * 100);
+      return `<div class="contributor-card">
+        <a href="${contributor.html_url}" target="_blank" rel="noopener"><img class="contributor-avatar" src="${contributor.avatar_url}" alt="${escHtml(contributor.login)}" /></a>
+        <div class="contributor-info">
+          <a class="contributor-name" href="${contributor.html_url}" target="_blank" rel="noopener">${escHtml(contributor.login)}</a>
+          <div class="contributor-meta">${contributor.contributions.toLocaleString()} commits</div>
+          <div class="contributor-bar-container">
+            <div class="contributor-bar"><div class="contributor-fill" style="width: ${percent}%"></div></div>
+            <span class="contributor-percent">${percent}%</span>
+          </div>
+        </div></div>`;
+    }).join('');
+    
+  } catch (e) {
+    container.innerHTML = `<div class="error-msg">Failed to load contributors: ${e.message}</div>`;
+  }
+}
+
+// ── Trends Tab ───────────────────────────────────────────
+async function loadTrendsData() {
+  const container = $('trends-content');
+  
+  container.innerHTML = `
+    <div class="trends-controls">
+      <select id="trends-sort">
+        <option value="updated">Recently Updated</option>
+        <option value="stars">Most Stars</option>
+        <option value="forks">Most Forks</option>
+      </select>
+      <select id="trends-visibility">
+        <option value="">All Repos</option>
+        <option value="public">Public Only</option>
+        <option value="private">Private Only</option>
+      </select>
+    </div>
+    <div id="trends-list" class="trends-grid">
+      <div class="loading-overlay"><div class="spinner"></div><span>Loading...</span></div>
+    </div>`;
+  
+  $('trends-sort').addEventListener('change', renderTrends);
+  $('trends-visibility').addEventListener('change', renderTrends);
+  
+  await loadTrendsDataFromAPI();
+  
+  state.trendsData = { loaded: true };
+}
+
+async function loadTrendsDataFromAPI() {
+  const container = $('trends-list');
+  container.innerHTML = `<div class="loading-overlay"><div class="spinner"></div><span>Loading...</span></div>`;
+  
+  try {
+    const reposWithActivity = await Promise.all(
+      state.repos.slice(0, 30).map(async repo => {
+        try {
+          const eventsRes = await gh(`/repos/${repo.full_name}/events?per_page=100`);
+          const events = eventsRes.ok ? await eventsRes.json() : [];
+          
+          const oneWeekAgo = new Date();
+          oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+          
+          const recentEvents = events.filter(e => new Date(e.created_at) > oneWeekAgo);
+          
+          return { ...repo, weeklyActivity: recentEvents.length, weeklyCommits: recentEvents.filter(e => e.type === 'PushEvent').reduce((sum, e) => sum + (e.payload?.commits?.length || 0), 0) };
+        } catch { return { ...repo, weeklyActivity: 0, weeklyCommits: 0 }; }
+      })
+    );
+    
+    state.trendsData.repos = reposWithActivity;
+    renderTrends();
+    
+  } catch (e) {
+    container.innerHTML = `<div class="error-msg">Failed to load trends: ${e.message}</div>`;
+  }
+}
+
+function renderTrends() {
+  const container = $('trends-list');
+  if (!state.trendsData?.repos) { container.innerHTML = '<div class="empty-state"><p>No data available.</p></div>'; return; }
+  
+  const sortBy = $('trends-sort').value;
+  const visibilityFilter = $('trends-visibility').value;
+  
+  let repos = [...state.trendsData.repos];
+  
+  if (visibilityFilter === 'public') repos = repos.filter(r => !r.private);
+  else if (visibilityFilter === 'private') repos = repos.filter(r => r.private);
+  
+  switch (sortBy) {
+    case 'stars': repos.sort((a, b) => b.stargazers_count - a.stargazers_count); break;
+    case 'forks': repos.sort((a, b) => b.forks_count - a.forks_count); break;
+    default: repos.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+  }
+  
+  repos = repos.slice(0, 20);
+  
+  if (repos.length === 0) { container.innerHTML = '<div class="empty-state"><p>No repositories match your filters.</p></div>'; return; }
+  
+  container.innerHTML = repos.map(repo => {
+    const activityClass = repo.weeklyActivity > 20 ? 'positive' : '';
+    const activityIcon = repo.weeklyActivity > 10 ? '📈' : repo.weeklyActivity > 0 ? '📊' : '📉';
+    
+    return `<div class="trend-card">
+      <div class="trend-header">
+        <a class="trend-name" href="${repo.html_url}" target="_blank" rel="noopener">${escHtml(repo.name)}</a>
+        ${repo.private ? '<span class="badge badge-private">Private</span>' : '<span class="badge badge-public">Public</span>'}
+      </div>
+      <div class="trend-stats">
+        <div class="trend-stat"><span class="trend-stat-icon">⭐</span><span>${repo.stargazers_count.toLocaleString()}</span></div>
+        <div class="trend-stat"><span class="trend-stat-icon">🍴</span><span>${repo.forks_count.toLocaleString()}</span></div>
+        <div class="trend-stat"><span class="trend-stat-icon">${activityIcon}</span><span class="trend-change ${activityClass}">${repo.weeklyActivity} events</span></div>
+      </div>
+      <div class="trend-description">${escHtml(repo.description || 'No description')}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Alerts Tab ───────────────────────────────────────────
+async function loadAlertsData() {
+  const container = $('alerts-content');
+  container.innerHTML = `
+    <div class="alerts-controls">
+      <select id="alerts-repo-select" class="repo-select">
+        <option value="">Select a repository...</option>
+        ${state.repos.map(r => `<option value="${escHtml(r.full_name)}">${escHtml(r.full_name)}</option>`).join('')}
+      </select>
+    </div>
+    <div id="alerts-list" class="alerts-list">
+      <div class="empty-state"><p>Select a repository to view security alerts.</p></div>
+    </div>`;
+  
+  $('alerts-repo-select').addEventListener('change', () => {
+    const repo = $('alerts-repo-select').value;
+    if (repo) loadAlerts(repo);
+  });
+  
+  state.alertsData = { loaded: true };
+}
+
+async function loadAlerts(repoFullName) {
+  const container = $('alerts-list');
+  container.innerHTML = `<div class="loading-overlay"><div class="spinner"></div><span>Loading alerts...</span></div>`;
+  
+  try {
+    const [dependabotRes, advisoriesRes] = await Promise.all([
+      gh(`/repos/${repoFullName}/dependabot/alerts`),
+      gh(`/repos/${repoFullName}/advisories?per_page=30`)
+    ]);
+    
+    const dependabotAlerts = dependabotRes.ok ? await dependabotRes.json() : [];
+    const advisories = advisoriesRes.ok ? await advisoriesRes.json() : [];
+    
+    const allAlerts = [
+      ...dependabotAlerts.map(a => ({ type: 'dependabot', severity: a.security_vulnerability?.severity || 'medium', package: a.security_advisory?.package?.name || 'Unknown', title: a.security_advisory?.summary || 'Vulnerability detected', description: a.security_advisory?.description || '', html_url: a.html_url || '', state: a.state || 'open', fixedIn: a.fixed_in, createdAt: a.created_at })),
+      ...advisories.filter(a => !dependabotAlerts.some(d => d.security_advisory?.ghsa_id === a.ghsa_id)).map(a => ({ type: 'advisory', severity: a.severity || 'medium', package: a.vulnerabilities?.[0]?.package?.name || 'Unknown', title: a.summary || 'Security advisory', description: a.description || '', html_url: a.html_url || '', state: 'open', fixedIn: a.fixed_in, createdAt: a.published_at }))
+    ];
+    
+    const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+    allAlerts.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
+    
+    if (allAlerts.length === 0) { container.innerHTML = '<div class="empty-state"><p>✅ No security alerts for this repository.</p></div>'; return; }
+    
+    const hasPermission = dependabotRes.ok || advisoriesRes.ok;
+    
+    if (!hasPermission) {
+      container.innerHTML = `<div class="permission-warning"><span>⚠️</span><span>You need admin access or security manager role to view dependency alerts for this repository.</span></div><div class="empty-state"><p>Select a different repository or request access.</p></div>`;
+      return;
+    }
+    
+    container.innerHTML = `
+      <div style="margin-bottom: 16px; color: var(--text-secondary); font-size: 14px;">Found ${allAlerts.length} alert${allAlerts.length !== 1 ? 's' : ''}</div>
+      ${allAlerts.map(alert => `<div class="alert-card severity-${alert.severity}">
+        <div class="alert-icon">${alert.severity === 'critical' ? '🔴' : alert.severity === 'high' ? '🔶' : alert.severity === 'medium' ? '⚠️' : 'ℹ️'}</div>
+        <div class="alert-content">
+          <div class="alert-title">${escHtml(alert.title)}</div>
+          <div class="alert-meta">
+            <span class="alert-severity-badge ${alert.severity}">${escHtml(alert.severity)}</span>
+            <span>📦 ${escHtml(alert.package)}</span>
+            ${alert.fixedIn ? `<span>Fixed in ${escHtml(alert.fixedIn)}</span>` : ''}
+          </div>
+          ${alert.description ? `<p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">${escHtml(alert.description.substring(0, 200))}${alert.description.length > 200 ? '...' : ''}</p>` : ''}
+          <div class="alert-actions">
+            ${alert.html_url ? `<a href="${alert.html_url}" target="_blank" class="btn btn-outline btn-sm">View on GitHub</a>` : ''}
+            ${alert.state === 'open' ? `<span class="badge badge-open" style="align-self: center;">Open</span>` : ''}
+          </div>
+        </div>
+      </div>`).join('')}`;
+    
+  } catch (e) {
+    container.innerHTML = `<div class="permission-warning"><span>⚠️</span><span>Unable to fetch security alerts. This may require additional permissions.</span></div><div class="error-msg">Error: ${e.message}</div>`;
+  }
+}
+
+</script>
+</body>
+</html>
